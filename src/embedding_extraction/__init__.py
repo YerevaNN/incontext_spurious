@@ -1,0 +1,1 @@
+from src.embedding_extraction.extractor import Extractor

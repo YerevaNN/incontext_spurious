@@ -1,4 +1,4 @@
-name: incontext_spurious
+name: icl
 channels:
   - defaults
   - pytorch

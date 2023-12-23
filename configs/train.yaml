@@ -1,22 +1,16 @@
-name: train
-seed: 0
-print_config: True
-ignore_warnings: False
+experiment_name: ???
+n_repeat: 1
+gpu_device: 0
 
+global_lr: 1e-5
 
 defaults:
-  - datamodule: inaturalist_emb_contexts
-  - model: incontext_learner_gptj
-  - optimizer: adam_w
-  - scheduler: warmup_cosine_annealing
-  - trainer: default
-  - loggers: [aim]
-  - callbacks: [lr_monitor, model_checkpoint]
+  - experiment_settings: pipeline
   - override hydra/job_logging: custom
   - _self_
 
 hydra:
   run:
-    dir: ${oc.env:OUTPUT_DIR}/runs/${name}/${now:%Y-%m-%d_%H-%M-%S}
+    dir: ${oc.env:OUTPUT_DIR}/runs/${experiment_name}
   job:
     chdir: True

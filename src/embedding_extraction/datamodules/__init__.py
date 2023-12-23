@@ -1,0 +1,1 @@
+from src.embedding_extraction.datamodules.waterbirds import WaterBirdsDataModule

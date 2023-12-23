@@ -1,0 +1,31 @@
+_target_: src.incontextlearner.ICLTrainer
+
+defaults:
+  - icl_datamodule: datamodule
+  - icl_architecture: gpt2model
+
+model_params:
+  accelerator: gpu
+  devices: 
+    - ${gpu_device}
+  max_epochs: -1
+  batch_size: 64
+  num_workers: 12
+  gradient_clip_val: 0  # 0 produces no clipping
+  log_every_n_steps: 10
+  early_stopping:
+    _target_: src.utils.early_stopping.EarlyStoppingAndRollback
+    monitor: val_accuracy_wg # name of the logged metric which determines when model is improving
+    mode: max # can be "max" or "min"
+    patience: 30000 # how many epochs of not improving until training stops
+    min_delta: 0.0001 # minimum change in the monitored metric needed to qualify as an improvement
+    rollback_to_best: True
+  aim:
+    _target_: aim.pytorch_lightning.AimLogger
+    repo: ${hydra:runtime.cwd}
+    experiment: ${experiment_name}
+
+metric_show:
+  size: ${experiment_settings.incontextlearner.icl_datamodule.test_context.size}
+  label_ratios: [0.2, 0.5, 0.65, 0.9] # to disable, set to []
+  minority_ratios: [0, 0.3, 0.45, 0.6]

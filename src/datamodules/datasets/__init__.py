@@ -1,2 +1,0 @@
-from src.datamodules.datasets.inaturalist2017 import INaturalist2017Dataset
-from src.datamodules.datasets.inaturalist_emb_contexts import INaturalistEmbContextsDataset

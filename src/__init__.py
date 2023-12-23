@@ -1,4 +1,3 @@
-from src.extract_encodings import extract_encodings
-from src.compute_encodings_avg_norm_and_generate_tokens import compute_encodings_avg_norm_and_generate_tokens
-from src.generate_and_save_val_sets import generate_and_save_val_sets
-from src.train import train
+from src import utils
+from src.training import run_pipeline
+from src.visualization import run_streamlit

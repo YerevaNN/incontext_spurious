@@ -1,0 +1,3 @@
+defaults:
+  - embedding_extraction@embedding_extractor: extractor
+  - incontextlearning@incontextlearner: trainer

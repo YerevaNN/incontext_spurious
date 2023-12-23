@@ -1,4 +1,0 @@
-aim:
-  _target_: aim.pytorch_lightning.AimLogger
-  repo: ${oc.env:PROJECT_DIR}
-  experiment: default

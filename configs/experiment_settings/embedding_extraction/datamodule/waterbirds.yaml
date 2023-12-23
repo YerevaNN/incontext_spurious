@@ -1,0 +1,16 @@
+_target_: src.embedding_extraction.datamodules.WaterBirdsDataModule
+
+name: waterbirds
+root_dir: ${oc.env:DATA_ROOT_DIR}
+input_size: ${experiment_settings.embedding_extractor.network.input_size}
+
+batch_size: 32
+num_workers: 4
+
+num_classes: 2
+num_confounders: 2
+
+background:
+  change_bg: False # Set to True to randomly change the backgrounds of the dataset
+  water: 100 # Number of background to use
+  land: 100 # Number of background to use

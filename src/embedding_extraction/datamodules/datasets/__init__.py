@@ -1,0 +1,1 @@
+from src.embedding_extraction.datamodules.datasets.waterbirds import CustomizedWaterbirdsDataset as WaterbirdsDataset

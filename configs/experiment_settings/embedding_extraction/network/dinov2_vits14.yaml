@@ -1,0 +1,6 @@
+_target_: src.embedding_extraction.network.DinoV2
+
+name: dinov2_vits14
+model: dinov2_vits14
+input_size: 224
+embedding_size: 384

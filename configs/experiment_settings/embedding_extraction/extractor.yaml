@@ -1,0 +1,9 @@
+_target_: src.embedding_extraction.extractor.Extractor
+
+defaults:
+  - datamodule: waterbirds
+  - network: resnet50
+
+device: cuda:${gpu_device}
+
+cache_path: ${oc.env:OUTPUT_DIR}/cache/embedding_extractor/${experiment_settings.embedding_extractor.datamodule.name}/${experiment_settings.embedding_extractor.network.model}

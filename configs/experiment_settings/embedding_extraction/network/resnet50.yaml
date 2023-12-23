@@ -1,0 +1,7 @@
+_target_: src.embedding_extraction.network.ResNet50
+
+name: resnet50
+model: resnet50
+pretrained: True
+input_size: 224
+embedding_size: 2048

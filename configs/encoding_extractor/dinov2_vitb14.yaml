@@ -1,5 +1,0 @@
-_target_: src.encoding_extractors.DinoV2
-
-name: dinov2_vitb14
-
-model_name: dinov2_vitb14 # An identifier for the DINO V2 model variant to be loaded.

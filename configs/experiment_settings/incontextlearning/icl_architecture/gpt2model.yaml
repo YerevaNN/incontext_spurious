@@ -1,0 +1,25 @@
+_target_: src.incontextlearner.construction.InContextLearner
+
+n_dims: ${experiment_settings.embedding_extractor.network.embedding_size}
+
+icl_params:
+  n_positions: 1024 # relative pos.enc max seq_size
+  n_embd: 256
+  n_head: 8
+  n_layer: 6
+  n_inner: 512
+  resid_pdrop: 0.0
+  embd_pdrop: 0.0
+  attn_pdrop: 0.0
+  use_cache: False
+
+optimizer_conf:
+    target: torch.optim.Adam
+    lr: ${global_lr}
+
+num_classes: ${experiment_settings.embedding_extractor.datamodule.num_classes}
+num_confounders: ${experiment_settings.embedding_extractor.datamodule.num_confounders}
+
+label_emb_mode: "opposite" # ["opposite", "random"]
+label_ratios: ${experiment_settings.incontextlearner.metric_show.label_ratios}
+minority_ratios: ${experiment_settings.incontextlearner.metric_show.minority_ratios}
