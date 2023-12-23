@@ -112,7 +112,7 @@ class InContextLearner(L.LightningModule):
             if self._num_classes != 2:
                 raise AttributeError("the 'opposite' mode can only be implemented for binary classification")
 
-            label_vector = torch.rand(self._n_dims, dtype=torch.float32) * 2 # TODO: Automate (*2 manually add DINO's scale)
+            label_vector = torch.rand(self._n_dims, dtype=torch.float32) * 2 # TODO: Automate
             labels = nn.Parameter(torch.stack([label_vector, -label_vector], dim=0), requires_grad=False) # NOTE: For binary classification
         
         if self._label_emb_mode == "random":
