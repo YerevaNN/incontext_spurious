@@ -37,7 +37,7 @@ class ICLDataSet(Dataset):
         if self._split == "train":
             self._groups_idx = group_idx(self.y, self.c)
 
-    def __getsize(self, i, j, context_params): # TODO: improve 
+    def __getsize(self, i, j, context_params):
         size = context_params['size']
 
         if i == 0:
