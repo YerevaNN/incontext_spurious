@@ -8,7 +8,7 @@ from omegaconf import DictConfig
 from hydra.utils import instantiate
 
 from src.utils import WorstGroupAccuracy, WorstGroupLoss
-from src.utils import construct_sequence, combine, randomly_swap_labels
+from src.utils import construct_inference_sequence, construct_sequence_from_xy, randomly_swap_labels
 
 from transformers import GPT2Config, GPT2Model
 
@@ -23,7 +23,6 @@ class InContextLearner(L.LightningModule):
             label_emb_mode: str = "opposite",
             label_ratios: list = [],
             minority_ratios: list = [],
-            *args, **kwargs
         ):
         super().__init__()
         self.save_hyperparameters()
@@ -67,17 +66,16 @@ class InContextLearner(L.LightningModule):
         if self._label_ratios or self._minority_ratios:
             self._create_monitoring_metrics()
 
-
     def _create_monitoring_metrics(self):
-        self._ratios = ["val"]
+        self._dataloaders_names = ["val"]
 
-        self._ratios.extend([
-            f"{label_ratio}_{spur_ratio}"
+        self._dataloaders_names.extend([
+            f"{label_ratio}_{minority_ratio}"
             for label_ratio in self._label_ratios
-            for spur_ratio in self._minority_ratios
+            for minority_ratio in self._minority_ratios
         ])
 
-        for ratio in self._ratios:
+        for ratio in self._dataloaders_names:
             self.accuracy[ratio] = torchmetrics.Accuracy(task="multiclass", num_classes=self._num_classes)
             self.accuracy_wg[ratio] = WorstGroupAccuracy(num_groups=self._num_groups)
             self.loss[ratio] = torchmetrics.MeanMetric()
@@ -94,36 +92,36 @@ class InContextLearner(L.LightningModule):
         pred_y = self.out(transformer_output)[:, ::2, :]
 
         return pred_y
-    
+
     def forward(self, context, query, only_query=True):
         """
         context: (x, y) pair of vectors
         """
-        sequence = construct_sequence(context, query)
+        sequence = construct_inference_sequence(context, query)
         pred_y = self.sequence_forward(sequence).argmax(dim=-1)
 
         if only_query:
             return pred_y[:, -1]
-        
-        return pred_y.squeeze()
+
+        return pred_y
 
     def _create_labels_emb(self):
         if self._label_emb_mode == "opposite": # For binary
             if self._num_classes != 2:
                 raise AttributeError("the 'opposite' mode can only be implemented for binary classification")
 
-            label_vector = torch.rand(self._n_dims, dtype=torch.float32) * 2 # TODO: Automate
-            labels = nn.Parameter(torch.stack([label_vector, -label_vector], dim=0), requires_grad=False) # NOTE: For binary classification
+            label_vector = torch.rand(self._n_dims, dtype=torch.float32) * 2 # TODO: Automate (*2 manually add DINO's scale)
+            labels = nn.Parameter(torch.stack([label_vector, -label_vector], dim=0), requires_grad=False)
         
         if self._label_emb_mode == "random":
-            labels = nn.Parameter(torch.rand((self._num_classes, self._n_dims), dtype=torch.float32) * 2, requires_grad=False) # NOTE: For binary classification
+            labels = nn.Parameter(torch.rand((self._num_classes, self._n_dims), dtype=torch.float32) * 2, requires_grad=False)
 
         return labels
     
     def _calculate_metrics(self, pred_y, y, groups, set_name):
         example_losses = self.criterion(pred_y, y)
         loss = torch.mean(example_losses)
-        
+
         self.loss[set_name].update(loss.cpu())
         self.loss_wg[set_name].update(example_losses.cpu(), groups.cpu())
         self.accuracy[set_name].update(pred_y.cpu(), y.cpu())
@@ -136,36 +134,39 @@ class InContextLearner(L.LightningModule):
 
         return loss
 
-    def _eval_step(self, batch, set_name, *args, **kwargs):
-        context, query, y, c = batch
-        groups = y * self._num_confounders + c
+    def _eval_step(self, batch, dataloader_name):
+        context, query, query_y, query_c = batch
+        # context = (x, y) where both x is (batch_size, seq_len, dim) and y is (batch_size, seq_len)
+        # query is (batch_size, 1, dim)
+        # query_y and query_c are (batch_size, 1)
+        query_groups = query_y * self._num_confounders + query_c
 
-        sequence = construct_sequence(context, query, self.labels)
+        sequence = construct_inference_sequence(context, query, self.labels)
         pred_y = self.sequence_forward(sequence)
-        
-        loss = self._calculate_metrics(pred_y[:, -1, :], y.squeeze(), groups.squeeze(), set_name)
+
+        loss = self._calculate_metrics(pred_y=pred_y[:, -1, :], y=query_y.squeeze(), groups=query_groups.squeeze(), set_name=dataloader_name)
         return loss
-    
+
     def training_step(self, batch, *args, **kwargs):
         x, y, c = batch
         y = randomly_swap_labels(y) # randomly swap (0, 1)
         groups = y * self._num_confounders + c
 
-        sequence = combine(x, y, self.labels)
-        pred_y = self.sequence_forward(sequence)
+        sequence = construct_sequence_from_xy(x, y, self.labels)
+        pred_y = self.sequence_forward(sequence)  # (bath_size, num_examples, 2)
 
-        loss = self._calculate_metrics(pred_y.view(-1, 2), y.view(-1), groups.view(-1), "train") # flatten all batches
+        loss = self._calculate_metrics(pred_y=pred_y.view(-1, 2), y=y.view(-1), groups=groups.view(-1), set_name="train") # flattened batch
 
         return loss
 
     def validation_step(self, batch, batch_idx, dataloader_idx = None, *args, **kwargs):
-        set_name = self._ratios[dataloader_idx]
+        # batch_idx is an expected positional argument
+        dataloader_name = self._dataloaders_names[dataloader_idx]
+        return self._eval_step(batch, dataloader_name=dataloader_name)
 
-        return self._eval_step(batch, set_name, *args, **kwargs)
+    def test_step(self, batch, *args, **kwargs):
+        return self._eval_step(batch, set_name="test")
 
-    def test_step(self, batch, batch_idx, dataloader_idx = None, *args, **kwargs):
-        return self._eval_step(batch, "test", *args, **kwargs)
-    
     def configure_optimizers(self):
         target = self._optimizer_conf.pop('target')
         optimizer_conf = dict(**self._optimizer_conf, params=self.parameters())

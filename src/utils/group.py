@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 
-def group_idx(y, c):
+def group_indices(y, c):
     num_classes = len(np.unique(y))
     num_confounders = len(np.unique(c))
 

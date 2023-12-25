@@ -21,7 +21,6 @@ class ICLDataModule(L.LightningDataModule):
             num_classes: int,
             num_confounders: int,
             cache_path: str,
-            *args, **kwargs
         ):
         super().__init__()
         self.save_hyperparameters()
