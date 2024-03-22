@@ -1,7 +1,7 @@
 _target_: src.datamodules.WaterbirdsDataModule
 name: waterbirds
 
-root_dir: ${oc.env:DATA_ROOD_DIR}
+root_dir: ${oc.env:DATA_ROOT_DIR}
 resize_size: 224
 batch_size: 32
 num_workers: 0
