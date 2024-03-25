@@ -20,4 +20,13 @@ num_workers: 4
 
 spurious_setting: ${spurious_setting}  # Use the global value of 'spurious_setting'
 
+eval_query_split: test # split the queries in evaluation mode
+
+randomly_swap_labels: False # to randomly change the labels during training 0 <-> 1
+randomly_change_task: False # to randomly change the task during training to predict the background
+
+rotate_encodings: False # to randomly rotate the encodings during training
+n_rotation_matrices: null # count of the rotation matrices to use
+class_dependant_rotate: False # set to True to rotate each class independently
+
 val_sets: null # null if there is a single val set, otherwise this is the list of names of val sets

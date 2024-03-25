@@ -6,6 +6,7 @@ import random
 from torch.utils.data import Dataset
 from src.utils.dataset_helpers import TokenGenerator
 from src.datamodules.datasets.waterbirds import CustomizedWaterbirdsDataset as WaterbirdsDataset
+from src.utils.dataset_helpers.encoding_transforms import EncodingRotator, IdentityTransform
 
 log = logging.getLogger(__name__)
 
@@ -29,7 +30,11 @@ class WaterbirdsEmbContextsDataset(Dataset):
                                      and 'opposite' generates a pair of tokens where the second is the negative of the first.
         spurious_setting (str): Determines the handling mode of spurious tokens in the dataset instances.
                                 Options include 'separate_token'(x,c) , 'no_spurious'(x), 'sum'(x+c)
-        saved_data_path (str or None): Path for loading data; if None, new data is generated.
+        randomly_change_task (bool): Randomly change the labels during training 0 <-> 1.
+        randomly_swap_labels (bool): Randomly change the task during training to predict the background.
+        rotate_encodings (bool): Randomly rotate the encodings during training.
+        n_rotation_matrices (int): Count of the rotation matrices to use.
+        class_dependant_rotate (bool): Rotate the class-encodings independently.
     """
 
     def __init__(self,
@@ -43,7 +48,13 @@ class WaterbirdsEmbContextsDataset(Dataset):
                  are_spurious_tokens_fixed,
                  are_class_tokens_fixed,
                  token_generation_mode,
-                 spurious_setting):
+                 spurious_setting,
+                 randomly_change_task = False,
+                 randomly_swap_labels = False,
+                 rotate_encodings = False,
+                 n_rotation_matrices = None,
+                 class_dependant_rotate = False
+                 ):
         super(WaterbirdsEmbContextsDataset, self).__init__()
 
         dataset = WaterbirdsDataset(root_dir,
@@ -58,8 +69,8 @@ class WaterbirdsEmbContextsDataset(Dataset):
 
         if self._split == "train":
             self._queries_set = self._train_set
-        elif self._split == "val":
-            self._queries_set = dataset.get_subset("val")
+        else:
+            self._queries_set = dataset.get_subset(self._split)
         
         self._queries_groups = groups[self._queries_set.indices]
 
@@ -85,11 +96,19 @@ class WaterbirdsEmbContextsDataset(Dataset):
 
         self._spurious_setting = spurious_setting
 
+        self._randomly_swap_labels = randomly_swap_labels
+        self._randomly_change_task = randomly_change_task
+
+        if rotate_encodings:
+                self._img_encoding_transform = EncodingRotator(n_rotation_matrices, tokens_data["token_len"].item())
+                self._class_dependant_rotate = class_dependant_rotate
+        else:
+            self._img_encoding_transform = IdentityTransform()
+            self._class_dependant_rotate = False
+
     def __getitem__(self, idx):
         """
-        Retrieves an item from the dataset at the specified index. If 'self._saved_data_path' is None,
-        it generates a new data item. If 'self._saved_data_path' is not None, it loads the data item from
-        the saved path.
+        Retrieves an item from the dataset at the specified index.
 
         Args:
             idx (int): The index of the item to retrieve.
@@ -237,4 +256,20 @@ class WaterbirdsEmbContextsDataset(Dataset):
 
         input_seq.pop()  # removing the label of query from input sequence
 
-        return np.stack(input_seq), np.array(spurious_labels), np.array(class_labels), np.array(image_indices)
+        input_seq, spurious_labels, class_labels, image_indices = \
+            np.stack(input_seq), np.array(spurious_labels), np.array(class_labels), np.array(image_indices)
+        
+        if self._split == "train":
+            if self._randomly_change_task and np.random.choice([True, False]):
+                spurious_labels, class_labels = class_labels, spurious_labels
+
+            if self._randomly_swap_labels and np.random.choice([True, False]):
+                class_labels = -class_labels + 1 
+
+            if self._class_dependant_rotate:
+                for label in np.unique(class_label):
+                    input_seq[class_labels == label] = self._img_encoding_transform(input_seq[class_labels == label])
+            else:
+                input_seq = self._img_encoding_transform(input_seq)
+
+        return input_seq, spurious_labels, class_labels, image_indices
