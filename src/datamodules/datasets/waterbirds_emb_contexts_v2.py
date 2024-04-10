@@ -17,13 +17,18 @@ def _sample(
         dataset,
         dataset_groups,
         num_examples: int,
-        group_proportions: list[float],
+        minority_group_proportion: float,
         remaining_mask: Optional[np.ndarray] = None,
 ) -> list[Example]:
     """Samples a subset of examples given a dataset and groups of its examples."""
 
     if remaining_mask is None:
         remaining_mask = np.ones(len(dataset), dtype=bool)
+
+    minority_proportion = 0.5 * minority_group_proportion
+
+    group_proportions = [0.5 - minority_proportion, minority_proportion,
+                         minority_proportion, 0.5 - minority_proportion]
 
     group_counts = get_group_counts_based_on_proportions(
         num_examples=num_examples,
@@ -52,7 +57,7 @@ class WaterbirdsEmbContextsDatasetV2(BaseEmbContextsDatasetV2):
                  context_split: str,
                  query_split: str,
                  context_class_size: int,
-                 group_proportions: list[float],
+                 minority_group_proportion: float,
                  spurious_setting: str,
                  sp_token_generation_mode: str,
                  v1_behavior: bool = False,
@@ -73,7 +78,7 @@ class WaterbirdsEmbContextsDatasetV2(BaseEmbContextsDatasetV2):
         context_split (str): The split where context examples are selected from ('train' or 'val').
         query_split (str): The split where query examples are selected from ('train' or 'val').
         context_class_size (int): The size of each class in the context.
-        group_proportions (list[float]): Proportions for the 4 groups.
+        minority_group_proportion (float): The proportion of the minority group in the context per class.
         spurious_setting (str): Determines the handling mode of spurious tokens in the dataset instances.
                                 Options include 'no_spurious'(x), 'sum'(x+c), 'separate_token'(x, c)
                                 or 'sum_with_spurious'(x+c, c).
@@ -110,7 +115,7 @@ class WaterbirdsEmbContextsDatasetV2(BaseEmbContextsDatasetV2):
             saved_data_path=saved_data_path,
         )
 
-        self._group_proportions = group_proportions
+        self._minority_group_proportion = minority_group_proportion
         self._randomly_swap_labels = randomly_swap_labels
 
         dataset = WaterbirdsExtracted(root_dir,
@@ -158,7 +163,7 @@ class WaterbirdsEmbContextsDatasetV2(BaseEmbContextsDatasetV2):
         context = _sample(dataset=self._context_set,
                           dataset_groups=self._context_groups,
                           num_examples=2 * self._context_class_size,
-                          group_proportions=self._group_proportions)
+                          minority_group_proportion=self._minority_group_proportion)
 
         if self._context_split == self._query_split:
             remaining_mask = np.ones(len(self._context_set), dtype=bool)
@@ -170,7 +175,7 @@ class WaterbirdsEmbContextsDatasetV2(BaseEmbContextsDatasetV2):
         queries = _sample(dataset=self._query_set,
                           dataset_groups=self._query_groups,
                           num_examples=2 * self._context_class_size,
-                          group_proportions=[0.25, 0.25, 0.25, 0.25],
+                          minority_group_proportion=0.5,
                           remaining_mask=remaining_mask)
 
         if self._randomly_swap_labels and np.random.rand() < 0.5:

@@ -31,7 +31,7 @@ class WaterbirdsEmbContextsDataModuleV2(pl.LightningDataModule):
                  batch_size: int,
                  num_workers: Optional[int],
                  context_class_size: int,
-                 group_proportions: list[float],
+                 minority_group_proportion: float,
                  spurious_setting: str,
                  sp_token_generation_mode: str,
                  v1_behavior: bool,
@@ -49,7 +49,7 @@ class WaterbirdsEmbContextsDataModuleV2(pl.LightningDataModule):
             root_dir=root_dir,
             encoding_extractor=encoding_extractor,
             context_class_size=context_class_size,
-            group_proportions=group_proportions,
+            minority_group_proportion=minority_group_proportion,
             spurious_setting=spurious_setting,
             sp_token_generation_mode=sp_token_generation_mode,
             v1_behavior=v1_behavior,
@@ -72,7 +72,7 @@ class WaterbirdsEmbContextsDataModuleV2(pl.LightningDataModule):
         self._batch_size = batch_size
         self._num_workers = num_workers
         self._context_class_size = context_class_size
-        self._group_proportions = group_proportions
+        self._minority_group_proportion = minority_group_proportion
         self._spurious_setting = spurious_setting
         self._sp_token_generation_mode = sp_token_generation_mode
         self._v1_behavior = v1_behavior
