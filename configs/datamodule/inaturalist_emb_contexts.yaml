@@ -31,6 +31,9 @@ permute_input_dim: False
 
 ask_context_prob: null
 
+max_n_spurious: 10
+maximum_minority_prop: 0.15
+
 swapping_minority_proportion_context: 0.1
 swapping_minority_proportion_query: 0.5
 points_to_swap_range: [50, 100]
