@@ -6,7 +6,7 @@ import os
 import numpy as np
 
 from torch.utils.data import Dataset
-from src.utils.dataset_helpers import TokenGenerator, EncodingRotator, IdentityTransform, PartlySwapper
+from src.utils.dataset_helpers import TokenGenerator, EncodingRotator, IdentityTransform, PartlySwapper, MultiSumSpurious
 from src.utils.dataset_helpers.context_prep_utils import get_context_example_tokens,\
     get_query_example_tokens
 
@@ -31,6 +31,8 @@ class BaseEmbContextsDatasetV2(Dataset, ABC):
                  input_noise_norm_interval: Optional[list] = None,
                  permute_input_dim: bool = False,
                  ask_context_prob: Optional[float] = None,
+                 max_n_spurious: int = None,
+                 maximum_minority_prop: float = None,
                  swapping_minority_proportion_context: Optional[float] = None,
                  swapping_minority_proportion_query: Optional[float] = None,
                  points_to_swap_range: Optional[list] = None,
@@ -105,6 +107,13 @@ class BaseEmbContextsDatasetV2(Dataset, ABC):
         else:
             self._partly_swapper = None
 
+        if spurious_setting in ['inat_multisum_erm', 'inat_multisum_dro']:
+            self._multiple_summer = MultiSumSpurious(
+                max_n_spurious=max_n_spurious,
+                maximum_minority_prop=maximum_minority_prop)
+        else:
+            self._multiple_summer = None
+
     def __getitem__(self, idx) -> (np.ndarray, Examples, Examples, np.ndarray):
         """Returns a dataset example given the example index.
 
@@ -169,6 +178,15 @@ class BaseEmbContextsDatasetV2(Dataset, ABC):
             query_img_encodings=query_img_encodings)
         
         context_img_encodings, context[:, 1], query_img_encodings, queries[:, 1] = self._maybe_partly_swap_points(
+            context_img_encodings=context_img_encodings,
+            context_labels=context[:, 2],
+            context_spurs=context[:, 1],
+            query_img_encodings=query_img_encodings,
+            query_labels=queries[:, 2],
+            query_spurs=queries[:, 1],
+        )
+
+        context_img_encodings, context[:, 1], query_img_encodings, queries[:, 1] = self._maybe_add_multiple_spurious(
             context_img_encodings=context_img_encodings,
             context_labels=context[:, 2],
             context_spurs=context[:, 1],
@@ -277,6 +295,27 @@ class BaseEmbContextsDatasetV2(Dataset, ABC):
             query_labels,
             query_spurs,
         )
+    
+    def _maybe_add_multiple_spurious(
+                self,
+                context_img_encodings: np.ndarray,
+                context_labels: np.ndarray,
+                context_spurs: np.ndarray,
+                query_img_encodings: np.ndarray,
+                query_labels: np.ndarray,
+                query_spurs: np.ndarray,
+        ) -> (np.ndarray, np.ndarray, np.ndarray, np.ndarray):
+            if self._multiple_summer is None:
+                return context_img_encodings, context_spurs, query_img_encodings, query_spurs
+                
+            return self._multiple_summer(
+                context_img_encodings, 
+                context_labels, 
+                context_spurs,
+                query_img_encodings,
+                query_labels,
+                query_spurs,
+            )
     
     def _maybe_permute_embeddings(
             self,

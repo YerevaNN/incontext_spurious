@@ -47,6 +47,8 @@ class INaturalistEmbContextsDatasetV2(BaseEmbContextsDatasetV2):
                  input_noise_norm_interval: Optional[list] = None,
                  permute_input_dim: bool = False,
                  ask_context_prob: Optional[float] = None,
+                 max_n_spurious: int = None,
+                 maximum_minority_prop: float = None,
                  swapping_minority_proportion_context: Optional[float] = None,
                  swapping_minority_proportion_query: Optional[float] = None,
                  points_to_swap_range: Optional[list] = None,
@@ -83,7 +85,7 @@ class INaturalistEmbContextsDatasetV2(BaseEmbContextsDatasetV2):
         points_to_swap_range (list): The range of the number of points to swap in the selected vectors.
         random_task_switching (bool): Whether to switch the task randomly for each ICL instance.
         """
-        assert spurious_setting in ['inat_no_spurious', 'inat_sum_erm', 'inat_sum_dro', 'swap_erm', 'swap_dro']
+        assert spurious_setting in ['inat_no_spurious', 'inat_sum_erm', 'inat_sum_dro', 'swap_erm', 'swap_dro', 'inat_multisum_erm', 'inat_multisum_dro']
         assert not ((spurious_setting in ['swap_erm', 'swap_dro'])
                     and context_minority_group_proportion != 0 
                     and query_minority_group_proportion != 0)
@@ -103,6 +105,8 @@ class INaturalistEmbContextsDatasetV2(BaseEmbContextsDatasetV2):
             input_noise_norm_interval=input_noise_norm_interval,
             permute_input_dim=permute_input_dim,
             ask_context_prob=ask_context_prob,
+            max_n_spurious=max_n_spurious,
+            maximum_minority_prop=maximum_minority_prop,
             swapping_minority_proportion_context=swapping_minority_proportion_context,
             swapping_minority_proportion_query=swapping_minority_proportion_query,
             points_to_swap_range=points_to_swap_range,

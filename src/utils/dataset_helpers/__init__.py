@@ -2,3 +2,4 @@ from src.utils.dataset_helpers.inaturalist2017_preparator import INaturalist2017
 from src.utils.dataset_helpers.tokens_generator import TokenGenerator
 from src.utils.dataset_helpers.encoding_rotator import EncodingRotator, IdentityTransform
 from src.utils.dataset_helpers.partly_swapper import PartlySwapper
+from src.utils.dataset_helpers.multisum import MultiSumSpurious

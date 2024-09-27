@@ -52,11 +52,11 @@ def get_context_example_tokens(
         class_token: np.ndarray,
         spurious_setting: str,
 ) -> list[np.ndarray]:
-    if spurious_setting in ['inat_no_spurious', 'wb_erm', 'swap_erm']:
+    if spurious_setting in ['inat_no_spurious', 'wb_erm', 'swap_erm', 'inat_multisum_erm']:
         return [encode_context_x(img_encoding), encode_annotation(class_token)]
     if spurious_setting == 'inat_sum_erm':
         return [encode_context_x(img_encoding + x_spurious_token), encode_annotation(class_token)]
-    if spurious_setting in ['wb_dro', 'swap_dro']:
+    if spurious_setting in ['wb_dro', 'swap_dro', 'inat_multisum_dro']:
         return [encode_context_x(img_encoding), encode_annotation(class_token + c_spurious_token)]
     if spurious_setting == 'inat_sum_dro':
         return [encode_context_x(img_encoding + x_spurious_token), encode_annotation(class_token + c_spurious_token)]
@@ -68,7 +68,7 @@ def get_query_example_tokens(
         x_spurious_token: np.ndarray,
         spurious_setting: str,
 ) -> list[np.ndarray]:
-    if spurious_setting in ['wb_erm', 'wb_dro', 'inat_no_spurious', 'swap_erm', 'swap_dro']:
+    if spurious_setting in ['wb_erm', 'wb_dro', 'inat_no_spurious', 'swap_erm', 'swap_dro', 'inat_multisum_erm']:
         return [encode_query_x(img_encoding)]
     if spurious_setting in ['inat_sum_erm', 'inat_sum_dro']:
         return [encode_query_x(img_encoding + x_spurious_token)]
