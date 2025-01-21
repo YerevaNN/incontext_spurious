@@ -39,6 +39,7 @@ class INaturalistEmbContextsDatasetV2(BaseEmbContextsDatasetV2):
                  query_minority_group_proportion: float,
                  spurious_setting: str,
                  sp_token_generation_mode: str,
+                 select_classes_from_supercategories: bool = False,
                  use_context_as_intermediate_queries: bool = False,
                  reverse_task: bool = False,
                  rotate_encodings: bool = False,
@@ -65,6 +66,7 @@ class INaturalistEmbContextsDatasetV2(BaseEmbContextsDatasetV2):
         spurious_setting (str): Determines the handling mode of spurious tokens in the dataset instances.
         sp_token_generation_mode (str): Specifies whether the representations of two spurious labels should be
                                         'opposite' or 'random'.
+        select_classes_from_supercategories (bool): Whether to select classes from the same supercategories.
         use_context_as_intermediate_queries (bool): Whether intermediate queries should be the context examples.
         reverse_task (bool): Whether to predict the artificially created spurious variable instead of the object.
         rotate_encodings (bool): Determines if image encodings are rotated. True enables rotation
@@ -120,10 +122,50 @@ class INaturalistEmbContextsDatasetV2(BaseEmbContextsDatasetV2):
         self._class1_split = class1_split
         self._class2_split = class2_split
         if class1_split == class2_split:
-            self._categories = self._dataframe["category"].unique()
+            if select_classes_from_supercategories:
+                self._supercategories = [
+                    supercategory for supercategory in self._dataframe["supercategory"].unique() 
+                    if len(self._dataframe[self._dataframe['supercategory'] == supercategory]['category'].unique()) >= 2]
+                
+                self._categories = {
+                    supercategory: self._dataframe[self._dataframe['supercategory'] == supercategory]["category"].unique()
+                    for supercategory in self._supercategories
+                }
+            else:
+                self._supercategories = None
+
+                self._categories = self._dataframe["category"].unique()
         else:
-            self._categories = (self._dataframe.loc[self._dataframe['split'] == class1_split, "category"].unique(),
+            if select_classes_from_supercategories:
+                self._supercategories = [
+                    supercategory for supercategory in self._dataframe["supercategory"].unique() 
+                    if len(self._dataframe[(self._dataframe['supercategory'] == supercategory) 
+                                           & (self._dataframe['split'] == class1_split)]['category'].unique()) > 0 
+                    and len(self._dataframe[(self._dataframe['supercategory'] == supercategory) 
+                                            & (self._dataframe['split'] == class2_split)]['category'].unique()) > 0]
+            
+                self._categories = [{
+                        supercategory: self._dataframe[(self._dataframe['supercategory'] == supercategory) 
+                                                       & (self._dataframe['split'] == class_split)]["category"].unique()
+                        for supercategory in self._supercategories}
+                    for class_split in [class1_split, class2_split]]
+            else:
+                self._supercategories = None
+            
+                self._categories = (self._dataframe.loc[self._dataframe['split'] == class1_split, "category"].unique(),
                                 self._dataframe.loc[self._dataframe['split'] == class2_split, "category"].unique())
+                
+        if self._supercategories:
+            if isinstance(self._categories, list):
+                self._supercategories_prop = [
+                        len(self._categories[0][supercategory])
+                         + len(self._categories[1][supercategory]) 
+                    for supercategory in self._supercategories
+                    ]
+            else:
+                self._supercategories_prop = [len(self._categories[supercategory]) for supercategory in self._supercategories]
+
+            self._supercategories_prop = np.array(self._supercategories_prop) / np.sum(self._supercategories_prop)
 
         self._context_minority_group_proportion = context_minority_group_proportion
         self._query_minority_group_proportion = query_minority_group_proportion
@@ -142,9 +184,17 @@ class INaturalistEmbContextsDatasetV2(BaseEmbContextsDatasetV2):
         """
         # Randomly selecting two categories
         if self._class1_split != self._class2_split:
-            category1, category2 = (np.random.choice(x, size=1)[0] for x in self._categories)
+            if self._supercategories:
+                supercategory = np.random.choice(self._supercategories, p=self._supercategories_prop, size=1)[0]
+                category1, category2 = (np.random.choice(x[supercategory], size=1)[0] for x in self._categories)
+            else:
+                category1, category2 = (np.random.choice(x, size=1)[0] for x in self._categories)
         else:
-            category1, category2 = np.random.choice(self._categories, size=2, replace=False)
+            if self._supercategories:
+                supercategory = np.random.choice(self._supercategories, p=self._supercategories_prop, size=1)[0]
+                category1, category2 = np.random.choice(self._categories[supercategory], size=2, replace=False)
+            else:
+                category1, category2 = np.random.choice(self._categories, size=2, replace=False)
 
         # sampling context and query examples for each class
         context_cat1_size = num_context_examples // 2
