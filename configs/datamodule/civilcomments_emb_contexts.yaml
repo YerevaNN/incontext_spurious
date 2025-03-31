@@ -4,7 +4,8 @@ name: civilcomments_emb_contexts
 context_class_size: 64
 
 context_group_proportions: [0.45, 0.05, 0.05, 0.45]
-query_group_proportions: [0.25, 0.25, 0.25, 0.25]
+train_query_group_proportions: [0.25, 0.25, 0.25, 0.25]
+eval_query_group_proportions: [0.25, 0.25, 0.25, 0.25]
 
 root_dir: ${oc.env:DATA_ROOT_DIR}
 encoding_extractor: ${encoding_extractor.name}

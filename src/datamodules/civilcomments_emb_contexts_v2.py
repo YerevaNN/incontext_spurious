@@ -24,7 +24,8 @@ class CivilCommentsEmbContextsDataModuleV2(pl.LightningDataModule):
                  num_workers: int,
                  context_class_size: int,
                  context_group_proportions: list[float],
-                 query_group_proportions: list[float],
+                 train_query_group_proportions: list[float],
+                 eval_query_group_proportions: list[float],
                  spurious_setting: str,
                  sp_token_generation_mode: str,
                  use_context_as_intermediate_queries: bool,
@@ -43,8 +44,6 @@ class CivilCommentsEmbContextsDataModuleV2(pl.LightningDataModule):
             root_dir=root_dir,
             encoding_extractor=encoding_extractor,
             context_class_size=context_class_size,
-            context_group_proportions=context_group_proportions,
-            query_group_proportions=query_group_proportions,
             spurious_setting=spurious_setting,
             sp_token_generation_mode=sp_token_generation_mode,
             use_context_as_intermediate_queries=use_context_as_intermediate_queries,
@@ -55,6 +54,10 @@ class CivilCommentsEmbContextsDataModuleV2(pl.LightningDataModule):
         if allow_rotated_eval:
             self._core_params_for_eval['rotate_encodings'] = rotate_encodings
             self._core_params_for_eval['n_rotation_matrices'] = n_rotation_matrices
+
+        self.context_group_proportions = context_group_proportions
+        self.train_query_group_proportions = train_query_group_proportions
+        self.eval_query_group_proportions = eval_query_group_proportions
 
         self._aug_params = dict(
             rotate_encodings=rotate_encodings,
@@ -83,6 +86,8 @@ class CivilCommentsEmbContextsDataModuleV2(pl.LightningDataModule):
         if stage == "fit":
             self._train_dataset_for_fit = CivilCommentsEmbContextsDatasetV2(
                 **self._core_params,
+                context_group_proportions=self.context_group_proportions,
+                query_group_proportions=self.train_query_group_proportions,
                 **self._aug_params,
                 data_length=self._train_len,
                 context_split='train',
@@ -91,6 +96,8 @@ class CivilCommentsEmbContextsDataModuleV2(pl.LightningDataModule):
 
         self._train_dataset_for_eval = CivilCommentsEmbContextsDatasetV2(
             **self._core_params_for_eval,
+            context_group_proportions=self.context_group_proportions,
+            query_group_proportions=self.eval_query_group_proportions,
             data_length=self._eval_len,
             context_split='train',
             query_split='train',
@@ -98,6 +105,8 @@ class CivilCommentsEmbContextsDataModuleV2(pl.LightningDataModule):
 
         self._train_val_dataset = CivilCommentsEmbContextsDatasetV2(
             **self._core_params_for_eval,
+            context_group_proportions=self.context_group_proportions,
+            query_group_proportions=self.eval_query_group_proportions,
             data_length=self._eval_len,
             context_split='train',
             query_split='val',
@@ -105,6 +114,8 @@ class CivilCommentsEmbContextsDataModuleV2(pl.LightningDataModule):
 
         self._train_test_dataset = CivilCommentsEmbContextsDatasetV2(
             **self._core_params_for_eval,
+            context_group_proportions=self.context_group_proportions,
+            query_group_proportions=self.eval_query_group_proportions,
             data_length=self._eval_len,
             context_split='train',
             query_split='test',
@@ -112,6 +123,8 @@ class CivilCommentsEmbContextsDataModuleV2(pl.LightningDataModule):
 
         self._val_dataset = CivilCommentsEmbContextsDatasetV2(
             **self._core_params_for_eval,
+            context_group_proportions=self.context_group_proportions,
+            query_group_proportions=self.eval_query_group_proportions,
             data_length=self._eval_len,
             context_split='val',
             query_split='val',
