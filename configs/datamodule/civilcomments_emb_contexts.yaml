@@ -1,0 +1,35 @@
+_target_: src.datamodules.CivilCommentsEmbContextsDataModuleV2
+name: civilcomments_emb_contexts
+
+context_class_size: 64
+
+context_group_proportions: [0.45, 0.05, 0.05, 0.45]
+query_group_proportions: [0.25, 0.25, 0.25, 0.25]
+
+root_dir: ${oc.env:DATA_ROOT_DIR}
+encoding_extractor: ${encoding_extractor.name}
+
+train_len: 2000000
+eval_len: 1024 # 2^n, because CombinedDataloader removes the last non-full batch
+
+batch_size: 32
+num_workers: 4
+
+spurious_setting: ${spurious_setting}  # Use the global value of 'spurious_setting'
+sp_token_generation_mode: ${sp_token_generation_mode}  # Use the global value of 'sp_token_generation_mode'
+
+use_context_as_intermediate_queries: ${use_context_as_intermediate_queries}
+
+reverse_task: False
+
+rotate_encodings: False
+n_rotation_matrices: 10000  # produces roughly 40m different examples
+allow_rotated_eval: False
+
+randomly_swap_labels: False
+
+permute_input_dim: False
+
+ask_context_prob: null
+
+val_sets: [train, train_val, train_test, val]  # the order here should match the order in the combined loader

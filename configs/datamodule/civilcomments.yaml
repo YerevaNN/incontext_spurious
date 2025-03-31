@@ -1,0 +1,6 @@
+_target_: src.datamodules.CivilCommentsDataModule
+name: civilcomments
+
+root_dir: ${oc.env:DATA_ROOT_DIR}
+batch_size: 32
+num_workers: 0
