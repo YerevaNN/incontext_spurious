@@ -1,4 +1,3 @@
-from typing import Optional
 import logging
 import os.path
 
@@ -22,7 +21,7 @@ class CivilCommentsSubsetForEncodingExtraction(Dataset):
     def __getitem__(self, idx):
         x, y, metadata = self._wilds_civilcomments_subset[idx]
 
-        if str(x) in ['nan']: # We have exact two missing values. Fill them with "".
+        if str(x) in ['nan']: # We have exactly two missing values. Fill them with "".
             x = ""
 
         return x, self._wilds_civilcomments_subset.indices[idx]

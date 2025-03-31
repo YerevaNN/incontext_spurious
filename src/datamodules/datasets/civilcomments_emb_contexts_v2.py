@@ -85,10 +85,7 @@ class CivilCommentsEmbContextsDatasetV2(BaseEmbContextsDatasetV2):
         ask_context_prob (float or None): If specified, defines the probability with which a query is set to be one
                                           of previous context examples.
         """
-        assert spurious_setting in ['wb_erm', 'wb_dro', 'swap_erm', 'swap_dro']
-        assert not ((spurious_setting in ['swap_erm', 'swap_dro'])
-                    and any(context_group_proportions[1:3]) 
-                    and any(query_group_proportions[1:3]))
+        assert spurious_setting in ['wb_erm', 'wb_dro']
 
         super(CivilCommentsEmbContextsDatasetV2, self).__init__(
             encoding_extractor=encoding_extractor,
@@ -108,8 +105,8 @@ class CivilCommentsEmbContextsDatasetV2(BaseEmbContextsDatasetV2):
         self._randomly_swap_labels = randomly_swap_labels
 
         dataset = CivilCommentsExtracted(root_dir,
-                                      encoding_extractor=encoding_extractor,
-                                      reverse_task=reverse_task)
+                                         encoding_extractor=encoding_extractor,
+                                         reverse_task=reverse_task)
 
         train_set = dataset.get_subset("train")
         val_set = dataset.get_subset("val")
