@@ -4,6 +4,8 @@ from src.datamodules.datasets.waterbirds import WaterbirdsForEncodingExtraction,
 from src.datamodules.datasets.waterbirds_emb_contexts_v2 import WaterbirdsEmbContextsDatasetV2
 from src.datamodules.datasets.multinli import MultiNLIForEncodingExtraction, MultiNLIExtracted
 from src.datamodules.datasets.multinli_emb_contexts_v2 import MultiNLIEmbContextsDatasetV2
+from src.datamodules.datasets.civilcomments import CivilCommentsForEncodingExtraction, CivilCommentsExtracted
+from src.datamodules.datasets.civilcomments_emb_contexts_v2 import CivilCommentsEmbContextsDatasetV2
 from src.datamodules.datasets.celeba import CelebAForEncodingExtraction, CelebAExtracted
 from src.datamodules.datasets.celeba_emb_contexts_v2 import CelebAEmbContextsDatasetV2
 from src.datamodules.datasets.cub import CUBDataset
