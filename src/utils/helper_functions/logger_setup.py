@@ -1,5 +1,10 @@
 import os
 
+
+def is_main_process():
+    return os.environ.get('LOCAL_RANK', 0) == 0
+
+
 def setup_aim_logger(logger):
     """
     Setup the directory structure for the 'aim' logger.
@@ -17,6 +22,10 @@ def setup_aim_logger(logger):
         the 'aim' logger's hash to the parent directory's name and then changes the current
         working directory to this new directory.
     """
+
+    if not is_main_process():
+        return
+
     # Extract the unique hash associated with the 'aim' logger
     aim_hash = logger.experiment.hash
 
