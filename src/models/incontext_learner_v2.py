@@ -25,6 +25,8 @@ torch.set_float32_matmul_precision('high')
 class GPTJModelV2(GPTJModel):
     def __init__(self, config):
         super().__init__(config)
+        for param in self.wte.parameters():
+            param.requires_grad = False
 
     # @torch.compile(fullgraph=True)
     def forward(
