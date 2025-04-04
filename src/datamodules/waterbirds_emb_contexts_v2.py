@@ -132,7 +132,8 @@ class WaterbirdsEmbContextsDataModuleV2(pl.LightningDataModule):
         )
 
     def train_dataloader(self):
-        return DataLoader(self._train_dataset_for_fit, batch_size=self._batch_size, num_workers=self._num_workers)
+        return DataLoader(self._train_dataset_for_fit, batch_size=self._batch_size, num_workers=self._num_workers,
+                          pin_memory=True)
 
     def val_dataloader(self):
         """Creates a combined dataloader for all validation datasets."""

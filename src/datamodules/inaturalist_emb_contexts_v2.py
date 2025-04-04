@@ -112,7 +112,8 @@ class INaturalistEmbContextsDataModuleV2(pl.LightningDataModule):
             class2_split="outer")
 
     def train_dataloader(self):
-        return DataLoader(self._train_set, batch_size=self._batch_size, num_workers=self._num_workers)
+        return DataLoader(self._train_set, batch_size=self._batch_size, num_workers=self._num_workers,
+                          pin_memory=True)
 
     def val_dataloader(self):
         """Creates a combined dataloader for all validation datasets."""
