@@ -1,3 +1,4 @@
+from typing import Tuple
 import logging
 import os.path
 
@@ -45,7 +46,7 @@ class CivilCommentsSubsetExtracted(Dataset):
                  encodings: np.ndarray,
                  index_map: np.ndarray,
                  reverse_task: bool = False):
-        self._wilds_civilcomments_subset = wilds_civilcomments_subset
+
         self._reverse_task = reverse_task
 
         # permute rows of `encodings` such that the i-th row corresponds to the i-th example of the subset
@@ -56,13 +57,16 @@ class CivilCommentsSubsetExtracted(Dataset):
             encoding_row_index = index_map[idx_within_full_civilcomments]
             assert encoding_row_index != -1
             row_indices[idx] = encoding_row_index
-        self._encodings = encodings[row_indices]
+        encodings = encodings[row_indices]
 
-    def __getitem__(self, indices) -> (np.ndarray, Examples):
-        x = self._encodings[indices].copy()
-        y = self._wilds_civilcomments_subset.y_array[indices].numpy()
-        c_features = self._wilds_civilcomments_subset.metadata_array[indices, :15].numpy()
-        c = c_features[:, 6] # 6 indicates "Black" feature
+        self.x = encodings.copy()
+        self.y = wilds_civilcomments_subset.y_array.numpy()
+        self.c = wilds_civilcomments_subset.metadata_array[:, 6].numpy()  # 6 indicates "Black" feature
+
+    def __getitem__(self, indices) -> Tuple[np.ndarray, Examples]:
+        x = self.x[indices].copy()
+        y = self.y[indices].copy()
+        c = self.c[indices].copy()
 
         # reverse the task if specified
         if not self._reverse_task:
@@ -73,7 +77,7 @@ class CivilCommentsSubsetExtracted(Dataset):
         return x, examples
 
     def __len__(self):
-        return len(self._wilds_civilcomments_subset)
+        return len(self.y)
 
 
 class CivilCommentsExtracted:

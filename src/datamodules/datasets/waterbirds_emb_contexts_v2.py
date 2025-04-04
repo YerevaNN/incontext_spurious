@@ -125,13 +125,13 @@ class WaterbirdsEmbContextsDatasetV2(BaseEmbContextsDatasetV2):
             points_to_swap_range=points_to_swap_range
         )
 
-        self._context_group_proportions = context_group_proportions
-        self._query_group_proportions = query_group_proportions
+        self._context_group_proportions = np.array(context_group_proportions)
+        self._query_group_proportions = np.array(query_group_proportions)
         self._randomly_swap_labels = randomly_swap_labels
 
         if modified:
             # as we never use random class tokens, we can use them here
-            sp_vector_to_add = modified_scale * self._tokens_data['random_class_tokens'][0]
+            sp_vector_to_add = modified_scale * self._random_class_tokens[0]
         else:
             sp_vector_to_add = None
 

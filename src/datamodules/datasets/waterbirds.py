@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Tuple
 import logging
 import os.path
 
@@ -43,7 +43,7 @@ class WaterbirdsSubsetExtracted(Dataset):
                  index_map: np.ndarray,
                  reverse_task: bool = False,
                  sp_vector_to_add: Optional[np.ndarray] = None):
-        self._wilds_waterbirds_subset = wilds_waterbirds_subset
+
         self._reverse_task = reverse_task
         self._sp_vector_to_add = sp_vector_to_add
 
@@ -55,12 +55,16 @@ class WaterbirdsSubsetExtracted(Dataset):
             encoding_row_index = index_map[idx_within_full_waterbirds]
             assert encoding_row_index != -1
             row_indices[idx] = encoding_row_index
-        self._encodings = encodings[row_indices]
+        encodings = encodings[row_indices]
 
-    def __getitem__(self, indices) -> (np.ndarray, Examples):
-        x = self._encodings[indices].copy()
-        y = self._wilds_waterbirds_subset.y_array[indices].numpy()
-        c = self._wilds_waterbirds_subset.metadata_array[indices, 0].numpy()
+        self.x = encodings.copy()
+        self.y = wilds_waterbirds_subset.y_array.numpy()
+        self.c = wilds_waterbirds_subset.metadata_array[:, 0].numpy()
+
+    def __getitem__(self, indices) -> Tuple[np.ndarray, Examples]:
+        x = self.x[indices].copy()
+        y = self.y[indices].copy()
+        c = self.c[indices].copy()
 
         # add more background information if specified
         if self._sp_vector_to_add is not None:
@@ -75,7 +79,7 @@ class WaterbirdsSubsetExtracted(Dataset):
         return x, examples
 
     def __len__(self):
-        return len(self._wilds_waterbirds_subset)
+        return len(self.y)
 
 
 class WaterbirdsExtracted:

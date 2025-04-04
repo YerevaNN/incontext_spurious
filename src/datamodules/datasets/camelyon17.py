@@ -1,5 +1,5 @@
+from typing import Optional, Tuple
 import dataclasses
-from typing import Optional
 import logging
 import os.path
 
@@ -57,7 +57,7 @@ class Camelyon17SubsetExtracted(Dataset):
         self._reverse_task = reverse_task
         self._sp_vector_to_add = sp_vector_to_add
 
-    def __getitem__(self, indices) -> (np.ndarray, Examples):
+    def __getitem__(self, indices) -> Tuple[np.ndarray, Examples]:
         x = self._custom_subset.encodings[indices].copy()
         y = self._custom_subset.y_array[indices].numpy()
 

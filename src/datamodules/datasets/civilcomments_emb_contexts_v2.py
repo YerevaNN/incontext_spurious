@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Tuple
 import logging
 
 import numpy as np
@@ -100,8 +100,8 @@ class CivilCommentsEmbContextsDatasetV2(BaseEmbContextsDatasetV2):
             ask_context_prob=ask_context_prob,
         )
 
-        self._context_group_proportions = context_group_proportions
-        self._query_group_proportions = query_group_proportions
+        self._context_group_proportions = np.array(context_group_proportions)
+        self._query_group_proportions = np.array(query_group_proportions)
         self._randomly_swap_labels = randomly_swap_labels
 
         dataset = CivilCommentsExtracted(root_dir,
@@ -144,7 +144,7 @@ class CivilCommentsEmbContextsDatasetV2(BaseEmbContextsDatasetV2):
             self,
             num_context_examples: int,
             num_query_examples: int,
-    ) -> (Examples, Examples):
+    ) -> Tuple[Examples, Examples]:
         """Samples context and query examples.
 
         Returns:
