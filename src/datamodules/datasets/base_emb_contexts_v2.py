@@ -1,18 +1,36 @@
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, Tuple
 import logging
 import os
 
 import numpy as np
 
 from torch.utils.data import Dataset
-from src.utils.dataset_helpers import TokenGenerator, EncodingRotator, IdentityTransform, PartlySwapper
+from src.utils.dataset_helpers import EncodingRotator, IdentityTransform, PartlySwapper
 from src.utils.dataset_helpers.context_prep_utils import get_context_example_tokens,\
     get_query_example_tokens
 
 log = logging.getLogger(__name__)
 
 Examples = np.ndarray  # shaped (num_examples, 3) with each row being a triplet (index, spurious_label, class_label)
+
+
+def _generate_x_spurious_tokens(
+        token_len: int,
+        avg_norm: float,
+        sp_token_generation_mode: str
+) -> np.ndarray:
+
+    if sp_token_generation_mode == "random":
+        x_spurious_tokens = np.random.randn(2, token_len).astype(np.float32)
+    else:  # opposite
+        first_row = np.random.randn(1, token_len).astype(np.float32)
+        x_spurious_tokens = np.vstack((first_row, -first_row))
+
+    x_spurious_tokens = (x_spurious_tokens / np.linalg.norm(
+        x_spurious_tokens, axis=1, keepdims=True)) * avg_norm
+
+    return x_spurious_tokens
 
 
 class BaseEmbContextsDatasetV2(Dataset, ABC):
@@ -86,17 +104,12 @@ class BaseEmbContextsDatasetV2(Dataset, ABC):
                 'inaturalist2017/avg_norms',
                 f"{encoding_extractor}_l2.npz")
 
-
         tokens_data = np.load(token_data_path)
-        # Convert tokens_data to a dictionary to resolve "Bad CRC-32" error in multi-worker mode.
-        self._tokens_data = {k: tokens_data[k] for k in tokens_data.keys()}
-
-        tokens_generator = TokenGenerator(tokens_data=self._tokens_data,
-                                          sp_token_generation_mode=self._sp_token_generation_mode)
-
-        (self._x_spurious_tokens_generator,
-         self._c_spurious_tokens_generator,
-         self._class_tokens_generator) = tokens_generator()
+        self._token_len = np.copy(tokens_data["token_len"])
+        self._opposite_class_tokens = np.copy(tokens_data["opposite_class_tokens"])
+        self._opposite_spurious_tokens_2 = np.copy(tokens_data["opposite_spurious_tokens_2"])
+        self._random_class_tokens = np.copy(tokens_data["random_class_tokens"])
+        self._avg_norm = np.copy(tokens_data["avg_norm"])
 
         self._use_context_as_intermediate_queries = use_context_as_intermediate_queries
 
@@ -113,7 +126,7 @@ class BaseEmbContextsDatasetV2(Dataset, ABC):
         else:
             self._partly_swapper = None
 
-    def __getitem__(self, idx) -> (np.ndarray, Examples, Examples, np.ndarray):
+    def __getitem__(self, idx) -> Tuple[np.ndarray, Examples, Examples, np.ndarray]:
         """Returns a dataset example given the example index.
 
         Args:
@@ -126,9 +139,13 @@ class BaseEmbContextsDatasetV2(Dataset, ABC):
         """
 
         # get spurious and class tokens
-        x_spurious_tokens = self._x_spurious_tokens_generator()
-        c_spurious_tokens = self._c_spurious_tokens_generator()
-        class_tokens = self._class_tokens_generator()
+        x_spurious_tokens = _generate_x_spurious_tokens(
+            token_len=self._token_len,
+            avg_norm=self._avg_norm,
+            sp_token_generation_mode=self._sp_token_generation_mode
+        )
+        c_spurious_tokens = self._opposite_spurious_tokens_2
+        class_tokens = self._opposite_class_tokens
 
         # The following code block produces 2*self._context_class_size context and queries examples.
         # Some queries will be (0, 0, 0) implying that the query in the corresponding position is empty.
@@ -234,7 +251,7 @@ class BaseEmbContextsDatasetV2(Dataset, ABC):
             self,
             num_context_examples: int,
             num_query_examples: int,
-    ) -> (Examples, Examples):
+    ) -> Tuple[Examples, Examples]:
         """Should sample context and query examples with configured group proportions."""
         pass
 
@@ -258,7 +275,7 @@ class BaseEmbContextsDatasetV2(Dataset, ABC):
             self,
             context_img_encodings: np.ndarray,
             query_img_encodings: np.ndarray
-    ) -> (np.ndarray, np.ndarray):
+    ) -> Tuple[np.ndarray, np.ndarray]:
         joint = np.concatenate([context_img_encodings, query_img_encodings],
                                axis=0)
         joint = self._img_encoding_transform(joint)
@@ -273,7 +290,7 @@ class BaseEmbContextsDatasetV2(Dataset, ABC):
             query_img_encodings: np.ndarray,
             query_labels: np.ndarray,
             query_spurs: np.ndarray,
-    ) -> (np.ndarray, np.ndarray, np.ndarray, np.ndarray):
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         if self._partly_swapper is None:
             return context_img_encodings, context_spurs, query_img_encodings, query_spurs
             
@@ -290,7 +307,7 @@ class BaseEmbContextsDatasetV2(Dataset, ABC):
             self,
             context_img_encodings: np.ndarray,
             query_img_encodings: np.ndarray
-    ) -> (np.ndarray, np.ndarray):
+    ) -> Tuple[np.ndarray, np.ndarray]:
         if self._permute_input_dim:
             random_permutation = np.random.permutation(context_img_encodings.shape[1])
 
