@@ -1,13 +1,8 @@
 name: incontext_spurious
 channels:
   - defaults
-  - pytorch
-  - nvidia
 dependencies:
   - python=3.10.13
-  - torchvision=0.15.2
-  - pytorch-cuda=12.1
-  - pytorch=2.3.0
   - pip=23.3
   - pip:
       - -r requirements.txt
