@@ -20,6 +20,7 @@ import torchmetrics
 from src.utils.custom_metrics import MinorityMajorityAccuracy, GroupAccuracy, WorstGroupAccuracy
 
 torch.set_float32_matmul_precision('high')
+torch.backends.cudnn.benchmark = True
 
 
 class GPTJModelV2(GPTJModel):
@@ -28,7 +29,7 @@ class GPTJModelV2(GPTJModel):
         for param in self.wte.parameters():
             param.requires_grad = False
 
-    # @torch.compile(fullgraph=True)
+    @torch.compile(fullgraph=True)
     def forward(
         self,
         input_ids: Optional[torch.LongTensor] = None,
