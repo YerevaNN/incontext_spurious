@@ -405,3 +405,14 @@ class InContextLearnerV2(LightningModule):
             setattr(self, f"{set_name}_worst_group_accuracy", self.worst_group_accuracy[set_name])
             for i in range(4):
                 setattr(self, f"{set_name}_group_{i}_accuracy", self.group_accuracies[i][set_name])
+
+    def on_after_backward(self):
+        """Computes and logs gradient L2 norm."""
+        grad_norm = 0.0
+        for p in self.parameters():
+            if p.grad is not None:
+                grad_norm += p.grad.norm(2).item() ** 2
+        grad_norm = grad_norm ** 0.5
+
+        # Log it (use on_step=True if you want it per step)
+        self.log('grad_norm', grad_norm, on_step=True, on_epoch=False, prog_bar=True)
