@@ -1,0 +1,11 @@
+target: pytorch_optimizer.ScalableShampoo
+
+learning_rate: 1e-3  # Often Shampoo uses a higher LR than Adam initially, but needs tuning.
+betas: [0.9, 0.999]  # Similar to Adam's betas, momentum terms. Tune these.
+weight_decay: 0.0
+start_preconditioning_step: 25
+preconditioning_compute_steps: 100  # Default 1000, ideally 1.
+
+block_size: 512      # Key parameter for Shampoo: size of blocks for inverse p-th root computation.
+                     # Larger block_size is closer to the full matrix but more computationally expensive.
+                     # Smaller block_size is cheaper but a coarser approximation. 128, 256, 512 are common starting points.
