@@ -185,7 +185,7 @@ class InContextLearnerV2(LightningModule):
 
     def __init__(self,
                  embedding_size: int,
-                 network: GPTJModelV2,
+                 network_config: transformers.GPTJConfig,
                  loss_fn,
                  val_sets,
                  dataset_name: str,
@@ -209,6 +209,9 @@ class InContextLearnerV2(LightningModule):
             self._input_ln = nn.LayerNorm(embedding_size, eps=1e-5)
         else:
             self._input_ln = None
+
+        self._network_config = network_config
+        network = GPTJModelV2(network_config)
 
         if embedding_size != network.embed_dim:
           self._proj = nn.Linear(embedding_size, network.embed_dim)
