@@ -171,7 +171,8 @@ class GPTJModelV2(GPTJModel):
                 device=device
             )
             correction_for_intermediate_queries[:, query_indices] = min_dtype
-            correction_for_intermediate_queries.fill_diagonal_(0)
+            eye = torch.eye(sequence_length, device=device, dtype=dtype)
+            correction_for_intermediate_queries = correction_for_intermediate_queries * (1 - eye)
             correction_for_intermediate_queries.tril_()
             causal_mask += correction_for_intermediate_queries
 

@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 import logging
 import numpy as np
 import matplotlib
@@ -7,7 +8,10 @@ import scipy.stats as st
 
 from hydra.utils import instantiate, get_class
 from omegaconf import DictConfig
-from collections.abc import Iterable
+
+import torch.serialization
+
+from src.utils.helper_functions import get_allowed_classes
 
 matplotlib.use('Agg')
 log = logging.getLogger(__name__)
@@ -19,10 +23,14 @@ def evaluate(config: DictConfig):
     model_class = get_class(config.model._target_)
     del config.model._target_  # Remove _target_ key before instantiation
 
-    model = model_class.load_from_checkpoint(config.checkpoint_path, **instantiate(config.model), map_location='cpu')
-    # Specify map_location='cpu' to initially load the model on the CPU, overriding the default behavior of loading
-    # it on the GPU it was trained on. This provides flexibility for the model to be moved to a GPU as per the
-    # configuration settings of the trainer.
+    with torch.serialization.safe_globals(get_allowed_classes()):
+        # Specify map_location='cpu' to initially load the model on the CPU, overriding the default behavior of loading
+        # it on the GPU it was trained on. This provides flexibility for the model to be moved to a GPU as per the
+        # configuration settings of the trainer.
+        model = model_class.load_from_checkpoint(
+            config.checkpoint_path,
+            **instantiate(config.model),
+            map_location='cpu')
 
     # Instantiate trainer from configuration
     log.info(f"Instantiating trainer <{config.trainer._target_}>")

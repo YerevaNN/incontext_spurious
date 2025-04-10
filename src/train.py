@@ -1,18 +1,15 @@
-from typing import Any
-from collections import defaultdict
 import logging
 import os
 
 from hydra.utils import instantiate, get_class
 from pytorch_lightning.utilities import model_summary
 from pytorch_lightning import seed_everything
-from omegaconf import DictConfig, OmegaConf, ListConfig
-from omegaconf.base import ContainerMetadata, Metadata
-from omegaconf.nodes import AnyNode
+from omegaconf import DictConfig, OmegaConf
 
 import torch.serialization
 
 from src.utils import log_hyperparameters, setup_aim_logger
+from src.utils.helper_functions import get_allowed_classes
 
 log = logging.getLogger(__name__)
 
@@ -30,10 +27,7 @@ def train(config: DictConfig):
         model_class = get_class(config.model._target_)
         del config.model._target_  # Remove _target_ key before instantiation
 
-        allowed_classes = [DictConfig, ListConfig, OmegaConf, ContainerMetadata, Any, list, dict,
-                           defaultdict, int, float, AnyNode, Metadata]
-
-        with torch.serialization.safe_globals(allowed_classes):
+        with torch.serialization.safe_globals(get_allowed_classes()):
             model = model_class.load_from_checkpoint(
                 config.checkpoint_path,
                 **instantiate(config.model),
