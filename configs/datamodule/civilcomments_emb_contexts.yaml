@@ -20,6 +20,7 @@ spurious_setting: ${spurious_setting}  # Use the global value of 'spurious_setti
 sp_token_generation_mode: ${sp_token_generation_mode}  # Use the global value of 'sp_token_generation_mode'
 
 use_context_as_intermediate_queries: ${use_context_as_intermediate_queries}
+simpler_construction: false
 
 reverse_task: False
 

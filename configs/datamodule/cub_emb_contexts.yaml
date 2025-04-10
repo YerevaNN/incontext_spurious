@@ -15,6 +15,7 @@ num_workers: 4
 
 spurious_setting: ${spurious_setting}  # Use the global value of 'spurious_setting'
 sp_token_generation_mode: ${sp_token_generation_mode}  # Use the global value of 'sp_token_generation_mode'
+simpler_construction: false
 
 use_context_as_intermediate_queries: ${use_context_as_intermediate_queries}
 
