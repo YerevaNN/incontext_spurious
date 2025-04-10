@@ -1,7 +1,9 @@
 import logging
+import os
 
 from hydra.utils import instantiate, get_class
 from pytorch_lightning.utilities import model_summary
+from pytorch_lightning import seed_everything
 from omegaconf import DictConfig, OmegaConf
 
 
@@ -27,6 +29,10 @@ def train(config: DictConfig):
                                                  optimizer_conf=OmegaConf.to_container(config.optimizer, resolve=True),
                                                  scheduler_conf=OmegaConf.to_container(config.scheduler, resolve=True),
                                                  map_location='cpu')
+
+    # Now that the model is initialized, we seed everything again, but with a process-specific seed.
+    # This makes sure that with DDP, dataloaders of different processes return different data.
+    seed_everything(config.seed + int(os.environ.get('LOCAL_RANK', 0)))
 
     log.info(repr(model_summary.summarize(model)))
     log.info(f"Instantiating datamodule <{config.datamodule._target_}>")
