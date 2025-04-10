@@ -7,12 +7,14 @@ We use the following naming conventions:
   D: model dimensionality
   Q: number of queries
 """
-from typing import Optional, Tuple, Union
+from typing import Optional, Tuple, Union, Any
 
 from hydra.utils import instantiate
 from transformers.models.gptj import GPTJModel
 from transformers.modeling_outputs import BaseModelOutputWithPast
 from pytorch_lightning import LightningModule
+import logging
+import numpy as np
 import torch
 import torch.nn as nn
 import torchmetrics
@@ -22,6 +24,8 @@ from src.utils.custom_metrics import MinorityMajorityAccuracy, GroupAccuracy, Wo
 
 torch.set_float32_matmul_precision('high')
 torch.backends.cudnn.benchmark = True
+
+log = logging.getLogger(__name__)
 
 
 class GPTJModelV2(GPTJModel):
@@ -39,6 +43,7 @@ class GPTJModelV2(GPTJModel):
         output_attentions: Optional[bool] = None,
         output_hidden_states: Optional[bool] = None,
         return_dict: Optional[bool] = None,
+        current_stackformer_depth: Optional[int] = None,
         **kwargs,
     ) -> Union[Tuple, BaseModelOutputWithPast]:
         output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
@@ -75,6 +80,9 @@ class GPTJModelV2(GPTJModel):
         all_self_attentions = () if output_attentions else None
         all_hidden_states = () if output_hidden_states else None
         for i, block in enumerate(self.h):
+            # Stop if current depth of StackFormer is reached
+            if (current_stackformer_depth is not None) and i > current_stackformer_depth:
+                break
             # Model parallel
             if self.model_parallel:
                 torch.cuda.set_device(hidden_states.device)
@@ -192,6 +200,8 @@ class InContextLearnerV2(LightningModule):
                  optimizer_conf=None,
                  scheduler_conf=None,
                  input_layer_norm: bool = False,
+                 stackformer: bool = False,
+                 stackformer_block_size: int = 2,
                  ):
         """
         Args:
@@ -227,6 +237,17 @@ class InContextLearnerV2(LightningModule):
         self._optimizer_conf = optimizer_conf
         self._scheduler_conf = scheduler_conf
 
+        # StackFormer related configs
+        self._stackformer = stackformer
+        self._stackformer_block_size = stackformer_block_size
+        self._stackformer_num_stages, r = divmod(network_config.n_layer, stackformer_block_size)
+        assert r == 0, "Number of layers should be divisible by StackFormer block size."
+        if stackformer:
+            self._current_stackformer_depth = stackformer_block_size
+        else:
+            self._current_stackformer_depth = None
+
+        # Metrics
         self.accuracy = dict()
         self.accuracy_minority = dict()
         self.accuracy_majority = dict()
@@ -259,6 +280,7 @@ class InContextLearnerV2(LightningModule):
         out = self._network(
             inputs_embeds=input_embeds,
             query_indices=query_indices,
+            current_stackformer_depth=self._current_stackformer_depth,
             # output_attentions=True,
         )
         out = out.last_hidden_state
@@ -396,3 +418,50 @@ class InContextLearnerV2(LightningModule):
 
         # Log it (use on_step=True if you want it per step)
         self.log('grad_norm', grad_norm, on_step=True, on_epoch=False, prog_bar=True)
+
+    @torch.no_grad
+    def _copy_layer_params_and_opt_states(self, source_layer_idx: int, target_layer_idx: int):
+        param_dict = dict(self._network.named_parameters())
+        opt_state = self.trainer.optimizers[0].state
+        for k, v in param_dict.items():
+            if k.startswith(f'h.{source_layer_idx}.'):
+                k_target = k.replace(f'h.{source_layer_idx}.', f'h.{target_layer_idx}.')
+                log.info(f'\tCopying parameters from {k} to {k_target}')
+                param_dict[k_target].copy_(v)
+                if v in opt_state:
+                    log.info(f'\tCopying optimizer states from {k} to {k_target}')
+                    opt_state[param_dict[k_target]] = opt_state[v]
+
+    def _stackformer_stack(self):
+        """Does one stacking step of StackFormer."""
+        log.info("*"*80)
+        log.info("Doing a StackFormer stacking operation")
+        log.info(f"\tCurrent depth: {self._current_stackformer_depth}")
+        log.info(f"\tBlock size: {self._stackformer_block_size}")
+
+        current_n_layers = self._current_stackformer_depth
+        target_n_layers = current_n_layers + self._stackformer_block_size
+        current_n_blocks, r = divmod(current_n_layers, self._stackformer_block_size)
+        assert r == 0
+        middle_block_idx = current_n_blocks // 2
+
+        for layer_idx in range(
+            target_n_layers - 1,
+            (middle_block_idx + 1) * self._stackformer_block_size - 1,
+            -1):
+
+            self._copy_layer_params_and_opt_states(
+                source_layer_idx=layer_idx - self._stackformer_block_size,
+                target_layer_idx=layer_idx)
+
+        self._current_stackformer_depth += self._stackformer_block_size
+        log.info("*"*80)
+
+    def on_train_batch_start(self, batch: Any, batch_idx: int) -> Optional[int]:
+        if not self._stackformer:
+            return
+        num_batches = self.trainer.num_training_batches  # TODO(hrayrh): do I need a special logic for DDP
+        stackformer_stage_length = np.ceil(num_batches / self._stackformer_num_stages)
+        if batch_idx > 0 and batch_idx % stackformer_stage_length == 0:
+            self._stackformer_stack()
+            torch._dynamo.reset()  # reset dynamo cache so that recompilations don't exceed cache size

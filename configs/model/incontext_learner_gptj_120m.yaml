@@ -25,3 +25,6 @@ val_sets: ${datamodule.val_sets} # null if there is a single val set, otherwise 
 dataset_name: ${datamodule.name}
 
 input_layer_norm: False
+
+stackformer: False
+stackformer_block_size: 2
