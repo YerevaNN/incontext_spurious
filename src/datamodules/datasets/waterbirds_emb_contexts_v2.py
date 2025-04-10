@@ -66,41 +66,20 @@ class WaterbirdsEmbContextsDatasetV2(BaseEmbContextsDatasetV2):
                  ask_context_prob: Optional[float] = None,
                  swapping_minority_proportion_context: Optional[float] = None,
                  swapping_minority_proportion_query: Optional[float] = None,
-                 points_to_swap_range: Optional[list] = None):
+                 points_to_swap_range: Optional[list] = None,
+                 simpler_construction: bool = False):
         """
-        Args:
+        Additoinal args:
 
         root_dir (str): The root directory of the dataset.
-        encoding_extractor (str): The name of the encoding extractor used.
-        data_length (int): The length of the dataset.
         context_split (str): The split where context examples are selected from ('train' or 'val').
         query_split (str): The split where query examples are selected from ('train' or 'val').
-        context_class_size (int): The size of each class in the context.
         context_group_proportions(list[float]): Proportions for the 4 groups in contexts.
         query_group_proportions (list[float]): Proportions for the 4 groups in queries.
-        spurious_setting (str): Determines the handling mode of spurious tokens in the dataset instances.
-        sp_token_generation_mode (str): Specifies whether the representations of two spurious labels should be
-                                        'opposite' or 'random'.
-        use_context_as_intermediate_queries (bool): Whether intermediate queries should be the context examples.
         reverse_task (bool): Whether to predict background instead of foreground.
         modified (bool): Whether we explicitly add background information to image embeddings. Helpful to exacerbate
                          the problem of spurious correlation in case of Dino-V2 embeddings.
         modified_scale (float): The relative scale of background vector to be added.
-        rotate_encodings (bool): Determines if image encodings are rotated. True enables rotation
-                                 based on class labels, while False bypasses rotation.
-        n_rotation_matrices (int): Specifies the number of rotation matrices to generate and store.
-        randomly_swap_labels (bool): Whether to randomly swap labels (0 -> 1 and 1 -> 0) when creating an ILC instance.
-        label_noise_ratio_interval (list or None): Interval for the ratio of label noise. 
-                                If None, no label noise is added.
-        input_noise_norm_interval (list or None): Interval for the norm of Gaussian noise.
-                                If None, no Gaussian noise is added to representations.
-        permute_input_dim (bool): Determines if image encodings are permuted. 
-                                True enables permutation, while False bypasses it.
-        ask_context_prob (float or None): If specified, defines the probability with which a query is set to be one
-                                          of previous context examples.
-        swapping_minority_proportion_context (float): The proportion of the minority group's to create via swapping in context.
-        swapping_minority_proportion_query (float): The proportion of the minority group's to create via swapping in queries.
-        points_to_swap_range (list): A list containing the range of the number of points to swap in the selected vectors.
         """
         assert spurious_setting in ['wb_erm', 'wb_dro', 'swap_erm', 'swap_dro']
         assert not ((spurious_setting in ['swap_erm', 'swap_dro'])
@@ -122,7 +101,8 @@ class WaterbirdsEmbContextsDatasetV2(BaseEmbContextsDatasetV2):
             ask_context_prob=ask_context_prob,
             swapping_minority_proportion_context=swapping_minority_proportion_context,
             swapping_minority_proportion_query=swapping_minority_proportion_query,
-            points_to_swap_range=points_to_swap_range
+            points_to_swap_range=points_to_swap_range,
+            simpler_construction=simpler_construction,
         )
 
         self._context_group_proportions = np.array(context_group_proportions)

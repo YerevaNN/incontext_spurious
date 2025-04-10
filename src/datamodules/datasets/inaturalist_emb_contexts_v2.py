@@ -51,36 +51,16 @@ class INaturalistEmbContextsDatasetV2(BaseEmbContextsDatasetV2):
                  swapping_minority_proportion_query: Optional[float] = None,
                  points_to_swap_range: Optional[list] = None,
                  random_task_switching: bool = False,
-                 ):
+                 simpler_construction: bool = False):
         """
-        Arguments:
+        Additional args:
+
         dataset_path (str): The path to the dataset directory.
-        encoding_extractor (str): The name of the encoding extractor used.
-        data_length (int): The length of the dataset.
         class1_split (str): The type of data split of class 1 (e.g., 'inner_train', 'inner_val', 'outer').
         class2_split (str): The type of data split of class 2 (e.g., 'inner_train', 'inner_val', 'outer').
-        context_class_size (int): The size of each class in the context.
         context_minority_group_proportion (float): The proportion of the minority group in the context per class.
         query_minority_group_proportion (float): The proportion of the minority group in the context per class.
-        spurious_setting (str): Determines the handling mode of spurious tokens in the dataset instances.
-        sp_token_generation_mode (str): Specifies whether the representations of two spurious labels should be
-                                        'opposite' or 'random'.
-        use_context_as_intermediate_queries (bool): Whether intermediate queries should be the context examples.
         reverse_task (bool): Whether to predict the artificially created spurious variable instead of the object.
-        rotate_encodings (bool): Determines if image encodings are rotated. True enables rotation
-                                 based on class labels, while False bypasses rotation.
-        n_rotation_matrices (int): Specifies the number of rotation matrices to generate and store.
-        label_noise_ratio_interval (list or None): Interval for the ratio of label noise. 
-                                If None, no label noise is added.
-        input_noise_norm_interval (list or None): Interval for the norm of Gaussian noise.
-                                If None, no Gaussian noise is added to representations.
-        permute_input_dim (bool): Determines if image encodings are permuted. 
-                                True enables permutation, while False bypasses it.
-        ask_context_prob (float or None). If specified, defines the probability with which a query is set to be one
-                                          of previous context examples.
-        swapping_minority_proportion_context (float): Minority group proportion to create via swapping in the context.
-        swapping_minority_proportion_query (float): Minority group proportion to create via swapping in the queries.
-        points_to_swap_range (list): The range of the number of points to swap in the selected vectors.
         random_task_switching (bool): Whether to switch the task randomly for each ICL instance.
         """
         assert spurious_setting in ['inat_no_spurious', 'inat_sum_erm', 'inat_sum_dro', 'swap_erm', 'swap_dro']
@@ -106,6 +86,7 @@ class INaturalistEmbContextsDatasetV2(BaseEmbContextsDatasetV2):
             swapping_minority_proportion_context=swapping_minority_proportion_context,
             swapping_minority_proportion_query=swapping_minority_proportion_query,
             points_to_swap_range=points_to_swap_range,
+            simpler_construction=simpler_construction,
         )
 
         # Prepare encodings and data files

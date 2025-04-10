@@ -38,6 +38,7 @@ class CelebAEmbContextsDataModuleV2(pl.LightningDataModule):
                  permute_input_dim: bool,
                  ask_context_prob: float,
                  val_sets: list[str],
+                 simpler_construction: bool,
                  **kwargs):
         super(CelebAEmbContextsDataModuleV2, self).__init__()
 
@@ -53,6 +54,7 @@ class CelebAEmbContextsDataModuleV2(pl.LightningDataModule):
             reverse_task=reverse_task,
             modified=modified,
             modified_scale=modified_scale,
+            simpler_construction=simpler_construction,
         )
 
         self._aug_params = dict(

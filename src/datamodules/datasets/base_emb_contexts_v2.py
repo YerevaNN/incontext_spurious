@@ -52,6 +52,7 @@ class BaseEmbContextsDatasetV2(Dataset, ABC):
                  swapping_minority_proportion_context: Optional[float] = None,
                  swapping_minority_proportion_query: Optional[float] = None,
                  points_to_swap_range: Optional[list] = None,
+                 simpler_construction: bool = False,
                  ):
         """
         Arguments:
@@ -76,6 +77,7 @@ class BaseEmbContextsDatasetV2(Dataset, ABC):
         swapping_minority_proportion_context (float): The proportion of the minority group's to create via swapping in context.
         swapping_minority_proportion_query (float): The proportion of the minority group's to create via swapping in queries.
         points_to_swap_range (list): A list containing the range of the number of points to swap in the selected vectors.
+        simpler_construction (bool): If enabled, merges x and y information into a single vector.
         """
         super(BaseEmbContextsDatasetV2, self).__init__()
 
@@ -91,6 +93,7 @@ class BaseEmbContextsDatasetV2(Dataset, ABC):
         self._input_noise_norm_interval = input_noise_norm_interval
         self._permute_input_dim = permute_input_dim
         self._ask_context_prob = ask_context_prob
+        self._simpler_construction = simpler_construction
 
         # Loading tokens data
         if self._encoding_extractor in ["stroberta", "bert", "roberta"]:
@@ -137,15 +140,6 @@ class BaseEmbContextsDatasetV2(Dataset, ABC):
             (2 * context_class_size, 3) describing context/query examples with (id, spurious, class) tuples.
             query_indices specifies positions of input_seq corresponding to query tokens.
         """
-
-        # get spurious and class tokens
-        x_spurious_tokens = _generate_x_spurious_tokens(
-            token_len=self._token_len,
-            avg_norm=self._avg_norm,
-            sp_token_generation_mode=self._sp_token_generation_mode
-        )
-        c_spurious_tokens = self._opposite_spurious_tokens_2
-        class_tokens = self._opposite_class_tokens
 
         # The following code block produces 2*self._context_class_size context and queries examples.
         # Some queries will be (0, 0, 0) implying that the query in the corresponding position is empty.
@@ -213,6 +207,15 @@ class BaseEmbContextsDatasetV2(Dataset, ABC):
             context_img_encodings=context_img_encodings
         )
 
+        # Get spurious and class tokens
+        x_spurious_tokens = _generate_x_spurious_tokens(
+            token_len=self._token_len,
+            avg_norm=self._avg_norm,
+            sp_token_generation_mode=self._sp_token_generation_mode
+        )
+        c_spurious_tokens = self._opposite_spurious_tokens_2
+        class_tokens = self._opposite_class_tokens
+
         input_seq = []
         query_indices = []
         for i in range(len(context)):
@@ -224,6 +227,9 @@ class BaseEmbContextsDatasetV2(Dataset, ABC):
                 c_spurious_token=c_spurious_tokens[sp],
                 class_token=class_tokens[label],
                 spurious_setting=self._spurious_setting,
+                simpler_construction=self._simpler_construction,
+                label=label,
+                sp=sp,
             ))
 
             # Add current query related token.
@@ -233,7 +239,9 @@ class BaseEmbContextsDatasetV2(Dataset, ABC):
             query_tokens = get_query_example_tokens(
                 img_encoding=query_img_encodings[i],
                 x_spurious_token=x_spurious_tokens[sp],
-                spurious_setting=self._spurious_setting)
+                spurious_setting=self._spurious_setting,
+                simpler_construction=self._simpler_construction,
+            )
             assert len(query_tokens) == 1
             query_indices.append(len(input_seq))
             input_seq.extend(query_tokens)

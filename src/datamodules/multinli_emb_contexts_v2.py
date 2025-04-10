@@ -41,6 +41,7 @@ class MultiNLIEmbContextsDataModuleV2(pl.LightningDataModule):
                  ask_context_prob: float,
                  val_sets: list[str],
                  allow_rotated_eval: bool,
+                 simpler_construction: bool,
                  **kwargs):
         super(MultiNLIEmbContextsDataModuleV2, self).__init__()
 
@@ -54,6 +55,7 @@ class MultiNLIEmbContextsDataModuleV2(pl.LightningDataModule):
             reverse_task=reverse_task,
             modified=modified,
             modified_scale=modified_scale,
+            simpler_construction=simpler_construction,
         )
         self._core_params_for_eval = copy.deepcopy(self._core_params)
         if allow_rotated_eval:

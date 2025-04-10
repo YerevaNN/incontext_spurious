@@ -37,6 +37,7 @@ class CivilCommentsEmbContextsDataModuleV2(pl.LightningDataModule):
                  ask_context_prob: float,
                  val_sets: list[str],
                  allow_rotated_eval: bool,
+                 simpler_construction: bool,
                  **kwargs):
         super(CivilCommentsEmbContextsDataModuleV2, self).__init__()
 
@@ -48,6 +49,7 @@ class CivilCommentsEmbContextsDataModuleV2(pl.LightningDataModule):
             sp_token_generation_mode=sp_token_generation_mode,
             use_context_as_intermediate_queries=use_context_as_intermediate_queries,
             reverse_task=reverse_task,
+            simpler_construction=simpler_construction,
         )
 
         self._core_params_for_eval = copy.deepcopy(self._core_params)

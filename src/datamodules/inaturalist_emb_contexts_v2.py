@@ -38,6 +38,7 @@ class INaturalistEmbContextsDataModuleV2(pl.LightningDataModule):
                  points_to_swap_range: list[int],
                  random_task_switching: bool,
                  val_sets: list[str],
+                 simpler_construction: bool,
                  *args, **kwargs):
         super(INaturalistEmbContextsDataModuleV2, self).__init__()
 
@@ -54,6 +55,7 @@ class INaturalistEmbContextsDataModuleV2(pl.LightningDataModule):
             swapping_minority_proportion_context=swapping_minority_proportion_context,
             swapping_minority_proportion_query=swapping_minority_proportion_query,
             points_to_swap_range=points_to_swap_range,
+            simpler_construction=simpler_construction,
         )
 
         self._aug_params = dict(

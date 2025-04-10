@@ -43,6 +43,7 @@ class WaterbirdsEmbContextsDataModuleV2(pl.LightningDataModule):
                  swapping_minority_proportion_query: float,
                  points_to_swap_range: list[int],
                  allow_rotated_eval: bool,
+                 simpler_construction: bool,
                  **kwargs):
         super(WaterbirdsEmbContextsDataModuleV2, self).__init__()
 
@@ -61,6 +62,7 @@ class WaterbirdsEmbContextsDataModuleV2(pl.LightningDataModule):
             swapping_minority_proportion_context=swapping_minority_proportion_context,
             swapping_minority_proportion_query=swapping_minority_proportion_query,
             points_to_swap_range=points_to_swap_range,
+            simpler_construction=simpler_construction,
         )
 
         self._core_params_for_eval = copy.deepcopy(self._core_params)

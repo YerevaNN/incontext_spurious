@@ -46,30 +46,14 @@ class ImagenetEmbContextsDatasetV2(BaseEmbContextsDatasetV2):
                  input_noise_norm_interval: Optional[list] = None,
                  permute_input_dim: bool = False,
                  ask_context_prob: Optional[float] = None,
-                 ):
+                 simpler_construction: bool = False):
         """
-        Arguments:
+        Additional args:
+
         dataset_path (str): The path to the dataset directory.
-        encoding_extractor (str): The name of the encoding extractor used.
-        data_length (int): The length of the dataset.
         context_class_size (int): The size of each class in the context.
         context_minority_group_proportion (float): The proportion of the minority group in the context per class.
         query_minority_group_proportion (float): The proportion of the minority group in the context per class.
-        spurious_setting (str): Determines the handling mode of spurious tokens in the dataset instances.
-        sp_token_generation_mode (str): Specifies whether the representations of two spurious labels should be
-                                        'opposite' or 'random'.
-        use_context_as_intermediate_queries (bool): Whether intermediate queries should be the context examples.
-        rotate_encodings (bool): Determines if image encodings are rotated. True enables rotation
-                                 based on class labels, while False bypasses rotation.
-        n_rotation_matrices (int): Specifies the number of rotation matrices to generate and store.
-        label_noise_ratio_interval (list or None): Interval for the ratio of label noise. 
-                                If None, no label noise is added.
-        input_noise_norm_interval (list or None): Interval for the norm of Gaussian noise.
-                                If None, no Gaussian noise is added to representations.
-        permute_input_dim (bool): Determines if image encodings are permuted. 
-                                True enables permutation, while False bypasses it.
-        ask_context_prob (float or None). If specified, defines the probability with which a query is set to be one
-                                          of previous context examples.
         """
         super(ImagenetEmbContextsDatasetV2, self).__init__(
             encoding_extractor=encoding_extractor,
@@ -84,6 +68,7 @@ class ImagenetEmbContextsDatasetV2(BaseEmbContextsDatasetV2):
             input_noise_norm_interval=input_noise_norm_interval,
             permute_input_dim=permute_input_dim,
             ask_context_prob=ask_context_prob,
+            simpler_construction=simpler_construction,
         )
 
         # Prepare encodings and data files

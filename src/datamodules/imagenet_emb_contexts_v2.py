@@ -31,6 +31,7 @@ class ImagenetEmbContextsDataModuleV2(pl.LightningDataModule):
                  input_noise_norm_interval: list,
                  permute_input_dim: bool,
                  ask_context_prob: float,
+                 simpler_construction: bool,
                  *args, **kwargs):
         super(ImagenetEmbContextsDataModuleV2, self).__init__()
 
@@ -52,6 +53,7 @@ class ImagenetEmbContextsDataModuleV2(pl.LightningDataModule):
         self._input_noise_norm_interval = input_noise_norm_interval
         self._permute_input_dim = permute_input_dim
         self._ask_context_prob = ask_context_prob
+        self._simpler_construction = simpler_construction
 
         self._dataset = None
 
@@ -74,7 +76,8 @@ class ImagenetEmbContextsDataModuleV2(pl.LightningDataModule):
             label_noise_ratio_interval=None,
             input_noise_norm_interval=None,
             permute_input_dim=False,
-            ask_context_prob=None)
+            ask_context_prob=None,
+            simpler_construction=self._simpler_construction)
 
     def val_dataloader(self):
         return DataLoader(self._dataset, batch_size=self._batch_size, num_workers=self._num_workers)

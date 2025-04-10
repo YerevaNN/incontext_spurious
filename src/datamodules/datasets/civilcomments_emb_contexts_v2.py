@@ -59,31 +59,17 @@ class CivilCommentsEmbContextsDatasetV2(BaseEmbContextsDatasetV2):
                  n_rotation_matrices: Optional[int] = None,
                  randomly_swap_labels: bool = False,
                  permute_input_dim: bool = False,
-                 ask_context_prob: Optional[float] = None):
+                 ask_context_prob: Optional[float] = None,
+                 simpler_construction: bool = False):
         """
-        Args:
+        Additional args:
 
         root_dir (str): The root directory of the dataset.
-        encoding_extractor (str): The name of the encoding extractor used.
-        data_length (int): The length of the dataset.
         context_split (str): The split where context examples are selected from ('train' or 'val').
         query_split (str): The split where query examples are selected from ('train' or 'val').
-        context_class_size (int): The size of each class in the context.
         context_group_proportions(list[float]): Proportions for the 4 groups in contexts.
         query_group_proportions (list[float]): Proportions for the 4 groups in queries.
-        spurious_setting (str): Determines the handling mode of spurious tokens in the dataset instances.
-        sp_token_generation_mode (str): Specifies whether the representations of two spurious labels should be
-                                        'opposite' or 'random'.
-        use_context_as_intermediate_queries (bool): Whether intermediate queries should be the context examples.
         reverse_task (bool): Whether to predict background instead of foreground.
-        rotate_encodings (bool): Determines if image encodings are rotated. True enables rotation
-                                 based on class labels, while False bypasses rotation.
-        n_rotation_matrices (int): Specifies the number of rotation matrices to generate and store.
-        randomly_swap_labels (bool): Whether to randomly swap labels (0 -> 1 and 1 -> 0) when creating an ILC instance.
-        permute_input_dim (bool): Determines if image encodings are permuted. 
-                                True enables permutation, while False bypasses it.
-        ask_context_prob (float or None): If specified, defines the probability with which a query is set to be one
-                                          of previous context examples.
         """
         assert spurious_setting in ['wb_erm', 'wb_dro']
 
@@ -98,6 +84,7 @@ class CivilCommentsEmbContextsDatasetV2(BaseEmbContextsDatasetV2):
             n_rotation_matrices=n_rotation_matrices,
             permute_input_dim=permute_input_dim,
             ask_context_prob=ask_context_prob,
+            simpler_construction=simpler_construction,
         )
 
         self._context_group_proportions = np.array(context_group_proportions)

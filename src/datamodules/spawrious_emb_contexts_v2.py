@@ -39,6 +39,7 @@ class SpawriousEmbContextsDataModuleV2(pl.LightningDataModule):
                  permute_input_dim: bool,
                  ask_context_prob: float,
                  val_sets: list[str],
+                 simpler_construction: bool,
                  **kwargs):
         super(SpawriousEmbContextsDataModuleV2, self).__init__()
 
@@ -52,6 +53,7 @@ class SpawriousEmbContextsDataModuleV2(pl.LightningDataModule):
             reverse_task=reverse_task,
             modified=modified,
             modified_scale=modified_scale,
+            simpler_construction=simpler_construction,
         )
 
         self.context_group_proportions = context_group_proportions
