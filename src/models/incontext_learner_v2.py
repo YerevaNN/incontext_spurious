@@ -8,6 +8,7 @@ We use the following naming conventions:
   Q: number of queries
 """
 from typing import Optional, Tuple, Union, Any
+import re
 
 from hydra.utils import instantiate
 from transformers.models.gptj import GPTJModel
@@ -244,6 +245,7 @@ class InContextLearnerV2(LightningModule):
         assert r == 0, "Number of layers should be divisible by StackFormer block size."
         if stackformer:
             self._current_stackformer_depth = stackformer_block_size
+            self._freeze_unused_layers()  # required for DDP
         else:
             self._current_stackformer_depth = None
 
@@ -419,6 +421,14 @@ class InContextLearnerV2(LightningModule):
         # Log it (use on_step=True if you want it per step)
         self.log('grad_norm', grad_norm, on_step=True, on_epoch=False, prog_bar=True)
 
+    def _freeze_unused_layers(self):
+        param_dict = dict(self._network.named_parameters())
+        for k, v in param_dict.items():
+            ret = re.match('^h\.(\d+)\..*', k)
+            if ret:
+                layer_idx = int(ret.group(1))
+                v.requires_grad = (layer_idx < self._current_stackformer_depth)
+
     @torch.no_grad
     def _copy_layer_params_and_opt_states(self, source_layer_idx: int, target_layer_idx: int):
         param_dict = dict(self._network.named_parameters())
@@ -434,11 +444,6 @@ class InContextLearnerV2(LightningModule):
 
     def _stackformer_stack(self):
         """Does one stacking step of StackFormer."""
-        log.info("*"*80)
-        log.info("Doing a StackFormer stacking operation")
-        log.info(f"\tCurrent depth: {self._current_stackformer_depth}")
-        log.info(f"\tBlock size: {self._stackformer_block_size}")
-
         current_n_layers = self._current_stackformer_depth
         target_n_layers = current_n_layers + self._stackformer_block_size
         current_n_blocks, r = divmod(current_n_layers, self._stackformer_block_size)
@@ -455,7 +460,6 @@ class InContextLearnerV2(LightningModule):
                 target_layer_idx=layer_idx)
 
         self._current_stackformer_depth += self._stackformer_block_size
-        log.info("*"*80)
 
     def on_train_batch_start(self, batch: Any, batch_idx: int) -> Optional[int]:
         if not self._stackformer:
@@ -463,5 +467,14 @@ class InContextLearnerV2(LightningModule):
         num_batches = self.trainer.num_training_batches  # TODO(hrayrh): do I need a special logic for DDP
         stackformer_stage_length = np.ceil(num_batches / self._stackformer_num_stages)
         if batch_idx > 0 and batch_idx % stackformer_stage_length == 0:
+            log.info("*"*80)
+            log.info("Doing a StackFormer stacking operation")
+            log.info(f"\tBatch {batch_idx} out of {num_batches}")
+            log.info(f"\tCurrent depth: {self._current_stackformer_depth}")
+            log.info(f"\tBlock size: {self._stackformer_block_size}")
+
             self._stackformer_stack()
             torch._dynamo.reset()  # reset dynamo cache so that recompilations don't exceed cache size
+            self._freeze_unused_layers()  # required for DDP
+
+            log.info("*"*80)
