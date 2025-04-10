@@ -1,11 +1,16 @@
+from typing import Any
+from collections import defaultdict
 import logging
 import os
 
 from hydra.utils import instantiate, get_class
 from pytorch_lightning.utilities import model_summary
 from pytorch_lightning import seed_everything
-from omegaconf import DictConfig, OmegaConf
+from omegaconf import DictConfig, OmegaConf, ListConfig
+from omegaconf.base import ContainerMetadata, Metadata
+from omegaconf.nodes import AnyNode
 
+import torch.serialization
 
 from src.utils import log_hyperparameters, setup_aim_logger
 
@@ -24,11 +29,19 @@ def train(config: DictConfig):
         # If provided, initialize from a checkpoint
         model_class = get_class(config.model._target_)
         del config.model._target_  # Remove _target_ key before instantiation
-        model = model_class.load_from_checkpoint(config.checkpoint_path,
-                                                 **instantiate(config.model),
-                                                 optimizer_conf=OmegaConf.to_container(config.optimizer, resolve=True),
-                                                 scheduler_conf=OmegaConf.to_container(config.scheduler, resolve=True),
-                                                 map_location='cpu')
+
+        allowed_classes = [DictConfig, ListConfig, OmegaConf, ContainerMetadata, Any, list, dict,
+                           defaultdict, int, float, AnyNode, Metadata]
+
+        with torch.serialization.safe_globals(allowed_classes):
+            model = model_class.load_from_checkpoint(
+                config.checkpoint_path,
+                **instantiate(config.model),
+                optimizer_conf=OmegaConf.to_container(config.optimizer, resolve=True),
+                scheduler_conf=OmegaConf.to_container(config.scheduler, resolve=True),
+                map_location='cpu',
+                weights_only=True
+            )
 
     # Now that the model is initialized, we seed everything again, but with a process-specific seed.
     # This makes sure that with DDP, dataloaders of different processes return different data.
