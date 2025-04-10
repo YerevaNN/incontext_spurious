@@ -464,7 +464,7 @@ class InContextLearnerV2(LightningModule):
     def on_train_batch_start(self, batch: Any, batch_idx: int) -> Optional[int]:
         if not self._stackformer:
             return
-        num_batches = self.trainer.num_training_batches  # TODO(hrayrh): do I need a special logic for DDP
+        num_batches = self.trainer.num_training_batches
         stackformer_stage_length = np.ceil(num_batches / self._stackformer_num_stages)
         if batch_idx > 0 and batch_idx % stackformer_stage_length == 0:
             log.info("*"*80)
