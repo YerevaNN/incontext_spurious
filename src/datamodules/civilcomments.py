@@ -44,31 +44,21 @@ class CivilCommentsDataModule(pl.LightningDataModule):
 
     def train_dataloader(self) -> DataLoader:
         """Returns a DataLoader for the training subset of the CivilComments dataset."""
-        train_data = self._dataset.get_subset("train")
-
-        train_loader = get_train_loader("standard", train_data,
-                                        batch_size=self._batch_size,
-                                        num_workers=self._num_workers)
-
-        return train_loader
+        return get_train_loader("standard", self.train_dataset,
+                                batch_size=self._batch_size,
+                                num_workers=self._num_workers)
 
     def val_dataloader(self) -> DataLoader:
         """Returns a DataLoader for the validation subset of the CivilComments dataset."""
-        val_data = self._dataset.get_subset("val")
-        val_loader = get_eval_loader("standard", val_data,
-                                     batch_size=self._batch_size,
-                                     num_workers=self._num_workers)
-
-        return val_loader
+        return get_eval_loader("standard", self.val_dataset,
+                               batch_size=self._batch_size,
+                               num_workers=self._num_workers)
 
     def test_dataloader(self) -> DataLoader:
         """Returns a DataLoader for the test subset of the CivilComments dataset."""
-        test_data = self._dataset.get_subset("test")
-        test_loader = get_eval_loader("standard", test_data,
-                                      batch_size=self._batch_size,
-                                      num_workers=self._num_workers)
-
-        return test_loader
+        return get_eval_loader("standard", self.test_dataset,
+                               batch_size=self._batch_size,
+                               num_workers=self._num_workers)
 
     def get_combined_dataloader(self):
         sub_dataloaders = {"train": self.train_dataloader(),
@@ -81,18 +71,12 @@ class CivilCommentsDataModule(pl.LightningDataModule):
 
     @property
     def train_dataset(self):
-        train_data = self._dataset.get_subset("train")
-
-        return train_data
+        return self._dataset.get_subset("train")
 
     @property
     def val_dataset(self):
-        train_data = self._dataset.get_subset("val")
-
-        return train_data
+        return self._dataset.get_subset("val")
 
     @property
     def test_dataset(self):
-        train_data = self._dataset.get_subset("test")
-
-        return train_data
+        return self._dataset.get_subset("test")
