@@ -55,7 +55,6 @@ class WaterbirdsEmbContextsDataModuleV2(pl.LightningDataModule):
             query_group_proportions=query_group_proportions,
             spurious_setting=spurious_setting,
             sp_token_generation_mode=sp_token_generation_mode,
-            use_context_as_intermediate_queries=use_context_as_intermediate_queries,
             reverse_task=reverse_task,
             modified=modified,
             modified_scale=modified_scale,
@@ -64,6 +63,8 @@ class WaterbirdsEmbContextsDataModuleV2(pl.LightningDataModule):
             points_to_swap_range=points_to_swap_range,
             simpler_construction=simpler_construction,
         )
+
+        self.use_context_as_intermediate_queries = use_context_as_intermediate_queries
 
         self._core_params_for_eval = copy.deepcopy(self._core_params)
         if allow_rotated_eval:
@@ -100,6 +101,7 @@ class WaterbirdsEmbContextsDataModuleV2(pl.LightningDataModule):
             self._train_dataset_for_fit = WaterbirdsEmbContextsDatasetV2(
                 **self._core_params,
                 **self._aug_params,
+                use_context_as_intermediate_queries=self.use_context_as_intermediate_queries,
                 data_length=self._train_len,
                 context_split='train',
                 query_split='train',
@@ -107,6 +109,7 @@ class WaterbirdsEmbContextsDataModuleV2(pl.LightningDataModule):
 
         self._train_dataset_for_eval = WaterbirdsEmbContextsDatasetV2(
             **self._core_params_for_eval,
+            use_context_as_intermediate_queries=False,
             data_length=self._eval_len,
             context_split='train',
             query_split='train',
@@ -114,6 +117,7 @@ class WaterbirdsEmbContextsDataModuleV2(pl.LightningDataModule):
 
         self._train_val_dataset = WaterbirdsEmbContextsDatasetV2(
             **self._core_params_for_eval,
+            use_context_as_intermediate_queries=False,
             data_length=self._eval_len,
             context_split='train',
             query_split='val',
@@ -121,6 +125,7 @@ class WaterbirdsEmbContextsDataModuleV2(pl.LightningDataModule):
 
         self._train_test_dataset = WaterbirdsEmbContextsDatasetV2(
             **self._core_params_for_eval,
+            use_context_as_intermediate_queries=False,
             data_length=self._eval_len,
             context_split='train',
             query_split='test',
@@ -128,6 +133,7 @@ class WaterbirdsEmbContextsDataModuleV2(pl.LightningDataModule):
 
         self._val_dataset = WaterbirdsEmbContextsDatasetV2(
             **self._core_params_for_eval,
+            use_context_as_intermediate_queries=False,
             data_length=self._eval_len,
             context_split='val',
             query_split='val',

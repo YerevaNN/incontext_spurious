@@ -50,12 +50,13 @@ class CelebAEmbContextsDataModuleV2(pl.LightningDataModule):
             query_group_proportions=query_group_proportions,
             spurious_setting=spurious_setting,
             sp_token_generation_mode=sp_token_generation_mode,
-            use_context_as_intermediate_queries=use_context_as_intermediate_queries,
             reverse_task=reverse_task,
             modified=modified,
             modified_scale=modified_scale,
             simpler_construction=simpler_construction,
         )
+
+        self.use_context_as_intermediate_queries = use_context_as_intermediate_queries
 
         self._aug_params = dict(
             rotate_encodings=rotate_encodings,
@@ -87,6 +88,7 @@ class CelebAEmbContextsDataModuleV2(pl.LightningDataModule):
             self._train_dataset_for_fit = CelebAEmbContextsDatasetV2(
                 **self._core_params,
                 **self._aug_params,
+                use_context_as_intermediate_queries=self.use_context_as_intermediate_queries,
                 data_length=self._train_len,
                 context_split='train',
                 query_split='train',
@@ -94,6 +96,7 @@ class CelebAEmbContextsDataModuleV2(pl.LightningDataModule):
 
         self._train_dataset_for_eval = CelebAEmbContextsDatasetV2(
             **self._core_params,
+            use_context_as_intermediate_queries=False,
             data_length=self._eval_len,
             context_split='train',
             query_split='train',
@@ -101,6 +104,7 @@ class CelebAEmbContextsDataModuleV2(pl.LightningDataModule):
 
         self._train_val_dataset = CelebAEmbContextsDatasetV2(
             **self._core_params,
+            use_context_as_intermediate_queries=False,
             data_length=self._eval_len,
             context_split='train',
             query_split='val',
@@ -108,6 +112,7 @@ class CelebAEmbContextsDataModuleV2(pl.LightningDataModule):
 
         self._train_test_dataset = CelebAEmbContextsDatasetV2(
             **self._core_params,
+            use_context_as_intermediate_queries=False,
             data_length=self._eval_len,
             context_split='train',
             query_split='test',
@@ -115,6 +120,7 @@ class CelebAEmbContextsDataModuleV2(pl.LightningDataModule):
 
         self._val_dataset = CelebAEmbContextsDatasetV2(
             **self._core_params,
+            use_context_as_intermediate_queries=False,
             data_length=self._eval_len,
             context_split='val',
             query_split='val',

@@ -50,13 +50,14 @@ class INaturalistEmbContextsDataModuleV2(pl.LightningDataModule):
             query_minority_group_proportion=query_minority_group_proportion,
             spurious_setting=spurious_setting,
             sp_token_generation_mode=sp_token_generation_mode,
-            use_context_as_intermediate_queries=use_context_as_intermediate_queries,
             reverse_task=reverse_task,
             swapping_minority_proportion_context=swapping_minority_proportion_context,
             swapping_minority_proportion_query=swapping_minority_proportion_query,
             points_to_swap_range=points_to_swap_range,
             simpler_construction=simpler_construction,
         )
+
+        self.use_context_as_intermediate_queries = use_context_as_intermediate_queries
 
         self._aug_params = dict(
             rotate_encodings=rotate_encodings,
@@ -90,6 +91,7 @@ class INaturalistEmbContextsDataModuleV2(pl.LightningDataModule):
             self._train_set = INaturalistEmbContextsDatasetV2(
                 **self._core_params,
                 **self._aug_params,
+                use_context_as_intermediate_queries=self.use_context_as_intermediate_queries,
                 data_length=self._train_len,
                 class1_split="inner_train",
                 class2_split="inner_train",
@@ -97,18 +99,21 @@ class INaturalistEmbContextsDataModuleV2(pl.LightningDataModule):
 
         self._inner_val_set = INaturalistEmbContextsDatasetV2(
             **self._core_params,
+            use_context_as_intermediate_queries=False,
             data_length=self._eval_len,
             class1_split="inner_val",
             class2_split="inner_val")
 
         self._outer_val_set = INaturalistEmbContextsDatasetV2(
             **self._core_params,
+            use_context_as_intermediate_queries=False,
             data_length=self._eval_len,
             class1_split="outer",
             class2_split="outer")
 
         self._inner_outer_val_set = INaturalistEmbContextsDatasetV2(
             **self._core_params,
+            use_context_as_intermediate_queries=False,
             data_length=self._eval_len,
             class1_split="inner_val",
             class2_split="outer")

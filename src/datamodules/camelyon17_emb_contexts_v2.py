@@ -49,7 +49,6 @@ class Camelyon17EmbContextsDataModuleV2(pl.LightningDataModule):
             context_class_size=context_class_size,
             spurious_setting=spurious_setting,
             sp_token_generation_mode=sp_token_generation_mode,
-            use_context_as_intermediate_queries=use_context_as_intermediate_queries,
             reverse_task=reverse_task,
             modified=modified,
             modified_scale=modified_scale,
@@ -59,6 +58,7 @@ class Camelyon17EmbContextsDataModuleV2(pl.LightningDataModule):
         self.context_group_proportions = context_group_proportions
         self.train_query_group_proportions = train_query_group_proportions
         self.eval_query_group_proportions = eval_query_group_proportions
+        self.use_context_as_intermediate_queries = use_context_as_intermediate_queries
 
         self._aug_params = dict(
             rotate_encodings=rotate_encodings,
@@ -91,6 +91,7 @@ class Camelyon17EmbContextsDataModuleV2(pl.LightningDataModule):
                 **self._core_params,
                 context_group_proportions=self.context_group_proportions,
                 query_group_proportions=self.train_query_group_proportions,
+                use_context_as_intermediate_queries=self.use_context_as_intermediate_queries,
                 **self._aug_params,
                 data_length=self._train_len,
                 context_split='train',
@@ -102,6 +103,7 @@ class Camelyon17EmbContextsDataModuleV2(pl.LightningDataModule):
             **self._core_params,
             context_group_proportions=self.context_group_proportions,
             query_group_proportions=self.eval_query_group_proportions,
+            use_context_as_intermediate_queries=False,
             data_length=self._eval_len,
             context_split='train',
             query_split='train',
@@ -112,6 +114,7 @@ class Camelyon17EmbContextsDataModuleV2(pl.LightningDataModule):
             **self._core_params,
             context_group_proportions=self.context_group_proportions,
             query_group_proportions=self.eval_query_group_proportions,
+            use_context_as_intermediate_queries=False,
             data_length=self._eval_len,
             context_split='train',
             query_split='val',
@@ -122,6 +125,7 @@ class Camelyon17EmbContextsDataModuleV2(pl.LightningDataModule):
             **self._core_params,
             context_group_proportions=self.context_group_proportions,
             query_group_proportions=self.eval_query_group_proportions,
+            use_context_as_intermediate_queries=False,
             data_length=self._eval_len,
             context_split='train',
             query_split='test',
@@ -133,6 +137,7 @@ class Camelyon17EmbContextsDataModuleV2(pl.LightningDataModule):
             context_group_proportions=self.context_group_proportions,
             query_group_proportions=self.eval_query_group_proportions,
             data_length=self._eval_len,
+            use_context_as_intermediate_queries=False,
             context_split='test',
             query_split='test',
         )
