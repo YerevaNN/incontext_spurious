@@ -47,7 +47,6 @@ class CivilCommentsEmbContextsDataModuleV2(pl.LightningDataModule):
             context_class_size=context_class_size,
             spurious_setting=spurious_setting,
             sp_token_generation_mode=sp_token_generation_mode,
-            use_context_as_intermediate_queries=use_context_as_intermediate_queries,
             reverse_task=reverse_task,
             simpler_construction=simpler_construction,
         )
@@ -60,6 +59,7 @@ class CivilCommentsEmbContextsDataModuleV2(pl.LightningDataModule):
         self.context_group_proportions = context_group_proportions
         self.train_query_group_proportions = train_query_group_proportions
         self.eval_query_group_proportions = eval_query_group_proportions
+        self.use_context_as_intermediate_queries = use_context_as_intermediate_queries
 
         self._aug_params = dict(
             rotate_encodings=rotate_encodings,
@@ -90,6 +90,7 @@ class CivilCommentsEmbContextsDataModuleV2(pl.LightningDataModule):
                 **self._core_params,
                 context_group_proportions=self.context_group_proportions,
                 query_group_proportions=self.train_query_group_proportions,
+                use_context_as_intermediate_queries=self.use_context_as_intermediate_queries,
                 **self._aug_params,
                 data_length=self._train_len,
                 context_split='train',
@@ -100,6 +101,7 @@ class CivilCommentsEmbContextsDataModuleV2(pl.LightningDataModule):
             **self._core_params_for_eval,
             context_group_proportions=self.context_group_proportions,
             query_group_proportions=self.eval_query_group_proportions,
+            use_context_as_intermediate_queries=False,
             data_length=self._eval_len,
             context_split='train',
             query_split='train',
@@ -109,6 +111,7 @@ class CivilCommentsEmbContextsDataModuleV2(pl.LightningDataModule):
             **self._core_params_for_eval,
             context_group_proportions=self.context_group_proportions,
             query_group_proportions=self.eval_query_group_proportions,
+            use_context_as_intermediate_queries=False,
             data_length=self._eval_len,
             context_split='train',
             query_split='val',
@@ -118,6 +121,7 @@ class CivilCommentsEmbContextsDataModuleV2(pl.LightningDataModule):
             **self._core_params_for_eval,
             context_group_proportions=self.context_group_proportions,
             query_group_proportions=self.eval_query_group_proportions,
+            use_context_as_intermediate_queries=False,
             data_length=self._eval_len,
             context_split='train',
             query_split='test',
@@ -127,6 +131,7 @@ class CivilCommentsEmbContextsDataModuleV2(pl.LightningDataModule):
             **self._core_params_for_eval,
             context_group_proportions=self.context_group_proportions,
             query_group_proportions=self.eval_query_group_proportions,
+            use_context_as_intermediate_queries=False,
             data_length=self._eval_len,
             context_split='val',
             query_split='val',
