@@ -276,6 +276,12 @@ class InContextLearnerV2(LightningModule):
 
         Returns: a torch tensor of shape (B, Q, 1) consisting of query prediction logits.
         """
+        # n = input_embeds.shape[-1]
+        # random_matrix = torch.randn(
+        #         (n, n), dtype=input_embeds.dtype, device=input_embeds.device) / 2.0 / np.sqrt(n)
+        # new_input_embeds = torch.einsum('bij,jk->bik', input_embeds, random_matrix)
+        # input_embeds[:, :, 3:] = new_input_embeds[:, :, 3:]
+
         if self._input_ln is not None:
             input_embeds = self._input_ln(input_embeds)
         if self._proj is not None:

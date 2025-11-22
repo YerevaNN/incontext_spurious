@@ -1,0 +1,7 @@
+_target_: src.encoding_extractors.SigLIP2
+
+name: siglip2
+
+ckpt: google/siglip2-so400m-patch14-224
+embedding_size: 1152
+

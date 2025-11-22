@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from transformers import AutoImageProcessor, AutoModel
 
 
 class DinoV2(nn.Module):
@@ -35,3 +36,22 @@ class DinoV2(nn.Module):
         emb = self.model(x)
 
         return emb
+
+
+class DinoV2WithRegisters(nn.Module):
+    def __init__(self, model_name, *args, **kwargs):
+        super().__init__()
+
+        self.processor = AutoImageProcessor.from_pretrained(model_name)
+        self.model = AutoModel.from_pretrained(model_name)
+
+    def forward(self, x):
+        inputs = self.processor(
+            images=x,
+            return_tensors="pt",
+            do_rescale=False
+        ).to(self.model.device)
+        with torch.no_grad():
+            outputs = self.model(**inputs)
+        return outputs.pooler_output
+

@@ -1,0 +1,5 @@
+_target_: src.encoding_extractors.SigLIP2
+
+name: siglip2_1b
+ckpt: google/siglip2-giant-opt-patch16-256
+embedding_size: 1536

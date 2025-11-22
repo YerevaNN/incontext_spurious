@@ -1,0 +1,7 @@
+_target_: src.encoding_extractors.DinoV2WithRegisters
+
+name: dinov2_wr_base
+
+model_name: facebook/dinov2-with-registers-base
+
+embedding_size: 768
